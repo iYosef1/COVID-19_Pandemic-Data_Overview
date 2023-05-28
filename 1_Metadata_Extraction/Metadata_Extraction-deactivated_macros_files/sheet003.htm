@@ -1,0 +1,1161 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Excel.Sheet>
+<meta name=Generator content="Microsoft Excel 15">
+<link id=Main-File rel=Main-File
+href="../Metadata_Extraction-deactivated_macros.htm">
+<link rel=File-List href=filelist.xml>
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+x\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]-->
+<link rel=Stylesheet href=stylesheet.css>
+<style>
+<!--table
+	{mso-displayed-decimal-separator:"\.";
+	mso-displayed-thousand-separator:"\,";}
+@page
+	{margin:.75in .7in .75in .7in;
+	mso-header-margin:.3in;
+	mso-footer-margin:.3in;}
+-->
+</style>
+<![if !supportTabStrip]><script language="JavaScript">
+<!--
+function fnUpdateTabs()
+ {
+  if (parent.window.g_iIEVer>=4) {
+   if (parent.document.readyState=="complete"
+    && parent.frames['frTabs'].document.readyState=="complete")
+   parent.fnSetActiveSheet(2);
+  else
+   window.setTimeout("fnUpdateTabs();",150);
+ }
+}
+
+if (window.name!="frSheet")
+ window.location.replace("../Metadata_Extraction-deactivated_macros.htm");
+else
+ fnUpdateTabs();
+//-->
+</script>
+<![endif]>
+</head>
+
+<body link="#0563C1" vlink="#954F72">
+
+<table border=0 cellpadding=0 cellspacing=0 width=3424 style='border-collapse:
+ collapse;table-layout:fixed;width:2569pt'>
+ <col class=xl66 width=402 style='mso-width-source:userset;mso-width-alt:14701;
+ width:302pt'>
+ <col class=xl66 width=186 style='mso-width-source:userset;mso-width-alt:6802;
+ width:140pt'>
+ <col width=1300 style='mso-width-source:userset;mso-width-alt:47542;
+ width:975pt'>
+ <col width=64 span=24 style='width:48pt'>
+ <tr height=35 style='height:26.25pt'>
+  <td height=35 class=xl103 width=402 style='height:26.25pt;width:302pt'>Dataset
+  Features</td>
+  <td class=xl103 width=186 style='border-left:none;width:140pt'>Data Type</td>
+  <td class=xl103 width=1300 style='border-left:none;width:975pt'>Feature
+  Description</td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl101 style='height:18.75pt'>continent</td>
+  <td class=xl101 style='border-left:none'>Categorical; nominal</td>
+  <td class=xl102 width=1300 style='border-left:none;width:975pt'>Continent is
+  the geograhical region of which the country<span style='mso-spacerun:yes'> 
+  </span>belongs to, e.g., Canada belongs to the continent of North America.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl95 style='height:18.75pt;border-top:none'>location</td>
+  <td class=xl95 style='border-top:none;border-left:none'>Categorical; nominal</td>
+  <td class=xl96 width=1300 style='border-top:none;border-left:none;width:975pt'>Location
+  in our dataset is the country matching with its respective ISO code.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl95 style='height:30.0pt;border-top:none'>date</td>
+  <td class=xl95 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl96 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the date (YYYY-MM-DD) on which the data was observed and recorded. In our
+  dataset, there is apparently a daily record, i.e., a report was submitted per
+  day. Contextually, the date being discrete, and hence quantifiable, it also
+  behaves as a categorical feature, i.e., it can be grouped into weeks, months,
+  quarters, and years.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl97 style='height:30.0pt;border-top:none'>iso_code</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Categorical; nominal</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>ISO
+  3166-1 is a set of codes used to uniquely each represent<span
+  style='mso-spacerun:yes'>  </span>country. There are 3 subversions within ISO
+  3166-1 and the version used in our data is the Alpha-3 code, e.g., CAN is the
+  code representing Canada. In this dataset, there are also instances of
+  OWID-defined regions, e.g., continents such as &quot;Europe&quot; will
+  contain the prefix &quot;OWID_&quot;.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=91 style='mso-height-source:userset;height:68.25pt'>
+  <td height=91 class=xl97 style='height:68.25pt;border-top:none'>population</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the number of people living within a location or country. The population
+  count was not updated according to the death counts throughout the pandemic.
+  The population count may also vary depending on the source from which it was
+  collected from.<font class="font0"> The locations' populations have likely
+  been used as a constant within the calculations of other existing features in
+  our dataset.<br>
+    <br>
+    This is a fixed feature value for each location.</font></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+  <td class=xl75></td>
+ </tr>
+ <tr height=39 style='height:29.25pt'>
+  <td height=39 class=xl97 style='height:29.25pt;border-top:none'>population_density</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  number represents the number of people (or population) divided by the land
+  area of the location measured in the unit of square kilometers, e.g., 10
+  people per square km or 10/km<font class="font13">²</font><font class="font14">.
+  This is a fixed feature value for each location.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>median_age</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the median age of the population of each location. This is a fixed feature
+  value for each location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>aged_65_older</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the share of population that is 65 years and older. The values have been
+  apparently provided as percentages. This is a fixed feature value for each
+  location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>aged_70_older</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the share of population that is 70 years and older. The values have been
+  apparently provided as percentages. This is a fixed feature value for each
+  location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=180 style='height:135.0pt'>
+  <td height=180 class=xl97 style='height:135.0pt;border-top:none'>gdp_per_capita</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  number is the inflation-adjusted GDP (Gross Domestic Product) at PPP
+  (Purchasing Power Parity) divided by the population of a location to acquire
+  a value that allows for comparisons to be made between locations at the
+  person-level and purchasing power of a location. Each value in this feature
+  is the economical output per person in a particular year at a location which
+  has been eliminated of currency exchange rate and represents the true average
+  productivity of a location, viable for comparison globally. <font
+  class="font12">GDP</font><font class="font0"> in itself is the standard of
+  living within a country or location in a year, or in other words, it is the
+  total value of goods and services purchased by the people of a location in a
+  year. </font><font class="font12">PPP</font><font class="font0"> is a metric
+  that &quot;normalizes&quot; currency exchange rates into international
+  dollars, so to speak, by directing GDP into a &quot;basket of goods&quot;. In
+  other words, PPP adjusts the different locations' GDP to its respective
+  purchasing power of similar/same goods and services from different locations
+  so that the effects of different currency exchange rates have been
+  eliminated. Inflation being the rate at which the general level of prices for
+  goods and services is rising, GDP can be adjusted for inflation by being made
+  &quot;constant&quot; in order to reflect the true PPP of the GDP without the
+  distortion caused by inflation.<br>
+    <br>
+    This is a fixed feature value for each location.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>extreme_poverty</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the share of population living in extreme poverty. The values have been
+  apparently provided as percentages. This is a fixed feature value for each
+  location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>cardiovasc_death_rate</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'><span
+  style='mso-spacerun:yes'> </span>This number is the death rate from
+  cardiovascular disease, i.e., the annual number of deaths per 100,000 people.
+  This is a fixed feature value for each location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>diabetes_prevalence</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the percentage of a population aging from 20 to 79 that is representative
+  of diabetes prevalence. This is a fixed feature value for each location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>female_smokers</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the share of women in a population who smoke. The values have been
+  apparently provided as percentages. This is a fixed feature value for each
+  location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>male_smokers</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the share of men in a population who smoke. The values have been
+  apparently provided as percentages. This is a fixed feature value for each
+  location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>handwashing_facilities</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the share of population with basic handwashing facilities on premises. The
+  values have been apparently provided as percentages. This is a fixed feature
+  value for each location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl97 style='height:18.75pt;border-top:none'>hospital_beds_per_thousand</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>This
+  is the number of hospital beds per 1,000 people. This is a fixed feature
+  value for each location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl97 style='height:30.0pt;border-top:none'>life_expectancy</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>Also
+  known as &quot;life expectancy at birth&quot;, this is the average number of
+  years a person is expected to live. It is indicative of a population's
+  health. Asides from COVID-19, note that this feature is bound to be affected
+  by other features such as GDP. This is a fixed feature value for each
+  location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=188 style='page-break-before:always;mso-height-source:userset;
+  height:141.0pt'>
+  <td height=188 class=xl97 style='height:141.0pt;border-top:none'>human_development_index</td>
+  <td class=xl97 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl98 width=1300 style='border-top:none;border-left:none;width:975pt'>The
+  HDI (human development index) is a summary measure that represents the
+  quality of life in a country/location. This measure is on a scale from 0 to 1
+  with 1 indicating a very high quality of life. It is determined by 3
+  dimensions:<br>
+    <br>
+    1) Health index: This dimension is represented by the life expectancy at
+  birth.<br>
+    2) Education index: This dimension is represented by the mean of years of
+  schooling for adults and expected years of schooling for children of
+  school-entering age.<br>
+    3) Income index: This dimension is represented by GNI (Gross National
+  Income) per capita. GNI is a location's true monetary value, i.e., it is the
+  GDP plus the incomes earned by residents overseas, minus the incomes earned
+  by non-residents in the domestic economy. The GNI per capita is the GNI
+  divided by the location's population.<br>
+    <br>
+    This is a fixed feature value for each location.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_tests</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the number of new COVID tests conducted each day.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_tests_per_thousand</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the number of new COVID tests conducted each day per
+  proportion size of 1,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_tests_smoothed</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of new tests.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='mso-height-source:userset;height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_tests_smoothed_per_thousand</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of new tests per
+  thousand. <font class="font12">It can be obtained by applying the appropriate
+  calculation to either feature, i.e., the new_tests_per_thousand or the
+  new_tests_smoothed.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>total_tests</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cumulative COVID tests conducted each day from
+  the first day.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>total_tests_per_thousand</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cumulative COVID tests conducted each day from
+  the first day per proportion size of 1,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=80 style='height:60.0pt'>
+  <td height=80 style='height:60.0pt' align=left valign=top><!--[if gte vml 1]><v:shapetype
+   id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
+   path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+   <v:stroke joinstyle="miter"/>
+   <v:formulas>
+    <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+    <v:f eqn="sum @0 1 0"/>
+    <v:f eqn="sum 0 0 @1"/>
+    <v:f eqn="prod @2 1 2"/>
+    <v:f eqn="prod @3 21600 pixelWidth"/>
+    <v:f eqn="prod @3 21600 pixelHeight"/>
+    <v:f eqn="sum @0 0 1"/>
+    <v:f eqn="prod @6 1 2"/>
+    <v:f eqn="prod @7 21600 pixelWidth"/>
+    <v:f eqn="sum @8 21600 0"/>
+    <v:f eqn="prod @7 21600 pixelHeight"/>
+    <v:f eqn="sum @10 21600 0"/>
+   </v:formulas>
+   <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+   <o:lock v:ext="edit" aspectratio="t"/>
+  </v:shapetype><v:shape id="Rectangle_x003a__x0020_Rounded_x0020_Corners_x0020_2"
+   o:spid="_x0000_s3073" type="#_x0000_t75" style='position:absolute;
+   margin-left:0;margin-top:3.75pt;width:73.5pt;height:65.25pt;z-index:1;
+   visibility:visible;mso-wrap-style:square;v-text-anchor:top' o:gfxdata="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
+" o:button="t" o:insetmode="auto">
+   <v:fill o:detectmouseclick="t"/>
+   <v:imagedata src="image007.png" o:title=""/>
+   <o:lock v:ext="edit" aspectratio="f"/>
+   <x:ClientData ObjectType="Pict">
+    <x:SizeWithCells/>
+    <x:FmlaMacro>'Metadata_Extraction-deactivated_macros.htm'!Module1.OpenFile</x:FmlaMacro>
+    <x:CF>Bitmap</x:CF>
+    <x:AutoPict/>
+   </x:ClientData>
+  </v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;
+  position:absolute;z-index:1;margin-left:0px;margin-top:5px;width:98px;
+  height:87px'><img width=98 height=87 src=image008.png v:shapes="Rectangle_x003a__x0020_Rounded_x0020_Corners_x0020_2"></span><![endif]><span
+  style='mso-ignore:vglayout2'>
+  <table cellpadding=0 cellspacing=0>
+   <tr>
+    <td height=80 class=xl99 width=402 style='height:60.0pt;border-top:none;
+    width:302pt'>positive_rate</td>
+   </tr>
+  </table>
+  </span></td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This field represents the proportion of COVID tests that came
+  back positive, provided as a rolling 7-day average. The most probable
+  equation used to obtain the values of this feature would be as follows:
+  positive_rate = new_cases_smoothed / new_tests_smoothed. As per the analysis
+  conducted, there is some variance between the equation's values which were
+  calculated and its respective provided positive_rate values, however, the
+  frequency of this variance is exponentially declining as the variance itself
+  gets larger. Also, there are many locations (as a whole or partially by
+  dates) at which the positive_rate fields could not be validated via
+  comparison with the calculated feature's fields, and vice versa.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl99 style='height:45.0pt;border-top:none'>tests_per_case</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This field represents the number of tests conducted per new
+  confirmed case of COVID, provided as a 7-day rolling average. It is the
+  inverse of the positive_rate feature, i.e., it is tests_per_case = 1 /
+  positive_rate, which is unsurprisingly more accurate than the values provided
+  by the inversed calculation (new_tests_smoothed / new_cases_smoothed). The
+  analysis mentioned in the description of the positive_rate feature was
+  applied to this feature and the results were essentially identical.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=121 style='height:90.75pt'>
+  <td height=121 class=xl115 style='height:90.75pt;border-top:none'>tests_units</td>
+  <td class=xl115 style='border-top:none;border-left:none'>Categorical; nominal</td>
+  <td class=xl116 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the reported unit by which COVID testing was conducted.
+  A country/location cannot contain mixed units. All metrics<font class="font12">
+  related to testing</font><font class="font0"> will have used the same testing
+  unit. The 4 different test units of this feature are the following:<br>
+    <br>
+    a) People Tested: The number of people tested.<br>
+    b) Tests Performed: The number of tests performed, i.e., a single person
+  could have been tested more than once in a given day.<br>
+    c) Samples Tested: The number of samples tested, i.e., there cases in which
+  more than one sample may be required to perform a given test.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl113 style='height:45.0pt'>new_cases</td>
+  <td class=xl113 style='border-left:none'>Numerical; discrete</td>
+  <td class=xl114 width=1300 style='border-left:none;width:975pt'>This is the
+  number of new cases of covid that occurred each day. Predominantly, this
+  value will either consistently increase or decrease but<span
+  style='mso-spacerun:yes'>  </span>it can also fluctuate randomly. As with the
+  total_cases feature, new_cases will be likely to consist of false positives
+  and incorrect diagnoses. This granular count can be aggregated for the new
+  cases that occurred within a particular week, month, and/or year. The counts
+  in this field can include probable cases where recorded.<span
+  style='mso-spacerun:yes'> </span></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_cases_per_million</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the number of new Covid cases that occurred each day per
+  proportion size of 1,000,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_cases_smoothed</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of new cases.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_cases_smoothed_per_million</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of new cases per
+  million.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl99 style='height:45.0pt;border-top:none'>total_cases</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cumulative number of Covid-19 cases each day
+  from the first day. This number should typically be increasing from where it
+  starts at 1 since it represents total count till date. In a case in which the
+  subsequent total count has dropped from the previous, this may be due to a
+  reason such as an incorrect diagnosis or false positive. This may also have
+  been a common occurance at the early stages of the corona outbreak when the
+  best tools were not available to test for covid. At the time of recording,
+  the counts in this field could also have included probable cases.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=26 style='height:19.5pt'>
+  <td height=26 class=xl115 style='height:19.5pt;border-top:none'>total_cases_per_million</td>
+  <td class=xl115 style='border-top:none;border-left:none'>Numerical;
+  continuous</td>
+  <td class=xl116 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This total cumulative number of Covid-19 cases occuring each day
+  per proportion size of 1,000,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=80 style='height:60.0pt'>
+  <td height=80 style='height:60.0pt' align=left valign=top><!--[if gte vml 1]><v:shape
+   id="Rectangle_x003a__x0020_Rounded_x0020_Corners_x0020_3" o:spid="_x0000_s3074"
+   type="#_x0000_t75" style='position:absolute;margin-left:0;margin-top:6.75pt;
+   width:73.5pt;height:63.75pt;z-index:2;visibility:visible;mso-wrap-style:square;
+   v-text-anchor:top' o:gfxdata="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
+" o:button="t" o:insetmode="auto">
+   <v:fill o:detectmouseclick="t"/>
+   <v:imagedata src="image009.png" o:title=""/>
+   <o:lock v:ext="edit" aspectratio="f"/>
+   <x:ClientData ObjectType="Pict">
+    <x:SizeWithCells/>
+    <x:FmlaMacro>'Metadata_Extraction-deactivated_macros.htm'!Module2.OpenFile</x:FmlaMacro>
+    <x:CF>Bitmap</x:CF>
+    <x:AutoPict/>
+   </x:ClientData>
+  </v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;
+  position:absolute;z-index:2;margin-left:0px;margin-top:9px;width:98px;
+  height:85px'><img width=98 height=85 src=image010.png v:shapes="Rectangle_x003a__x0020_Rounded_x0020_Corners_x0020_3"></span><![endif]><span
+  style='mso-ignore:vglayout2'>
+  <table cellpadding=0 cellspacing=0>
+   <tr>
+    <td height=80 class=xl113 width=402 style='height:60.0pt;width:302pt'>hosp_patients</td>
+   </tr>
+  </table>
+  </span></td>
+  <td class=xl113 style='border-left:none'>Numerical; discrete</td>
+  <td class=xl114 width=1300 style='border-left:none;width:975pt'>This field
+  exclusively represents the number of patients on a date who were diagnosed
+  with COVID-19 and had to be hospitalized, i.e., it is the present head count
+  of patients with COVID in the hospital and is not inclusive of those in the
+  ICU due to COVID. A field in this feature can be inclusive of existing
+  COVID-free patients who later contracted COVID or patients who were once in
+  the ICU but had improvements in their condition. Note that a single day or
+  constituent of a single 7-day summation which collectively comprises the
+  weekly_hosp_admissions feature is a subset of this feature's respective
+  record as it represents new hospital admissions.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>hosp_patients_per_million</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the number of hospital patients each day per proportion
+  size of 1,000,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='page-break-before:always;height:30.0pt'>
+  <td height=40 class=xl99 style='height:30.0pt;border-top:none'>icu_patients</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This field exclusively represents those who have been admitted
+  into the Intensive Care Unit (ICU) due to COVID-19. This may include existing
+  hospital patients who were transferred or altogether new patients.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>icu_patients_per_million</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the number of ICU patients each day per proportion size
+  of 1,000,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl99 style='height:30.0pt;border-top:none'>weekly_hosp_admissions</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This field represents the weekly number of new COVID-19 patients
+  admitted to hospitals. It is the summation of new admissions on a date plus
+  the new admissions of the preceding 6 days. This count may be inclusive of
+  patients who were once in the ICU but are no longer in need of any intensive
+  care. This feature is mutually exclusive from the weekly_icu_admissions
+  feature.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>weekly_hosp_admissions_per_million</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the number of weekly admissions of new hospital patients
+  each day per proportion size of 1,000,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl99 style='height:30.0pt;border-top:none'>weekly_icu_admissions</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This field represents the weekly number of new COVID-19 patients
+  admitted to the ICU. It is the summation of new admissions on a date plus the
+  new admissions of the preceding 6 days. This may include existing hospital
+  patients or new patients altogether.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=26 style='height:19.5pt'>
+  <td height=26 class=xl115 style='height:19.5pt;border-top:none'>weekly_icu_admissions_per_million</td>
+  <td class=xl115 style='border-top:none;border-left:none'>Numerical;
+  continuous</td>
+  <td class=xl116 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the number of weekly admissions of new ICU patients each
+  day per proportion size of 1,000,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl113 style='height:30.0pt'>new_deaths</td>
+  <td class=xl113 style='border-left:none'>Numerical; discrete</td>
+  <td class=xl114 width=1300 style='border-left:none;width:975pt'>This is the
+  number of new deaths that occurred each day. This is typically a confirmed
+  value that is unlikely to be erred, however, there may be instances in which
+  death was the most probable outcome for a patient and was recorded as such.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_deaths_per_million</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the number of new deaths that occurred each day per
+  proportion size of 1,000,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_deaths_smoothed</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of new deaths.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_deaths_smoothed_per_million</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of new deaths per
+  million.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl99 style='height:30.0pt;border-top:none'>total_deaths</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cumulated number of deaths that occurred each
+  day from the first day. This is typically a confirmed value that is unlikely
+  to be erred, however, there may be instances in which death being the most
+  probable outcome for a patient was still recorded as an actual death. Every
+  consecutive number within a region should either be equal to or greater than
+  the former death count.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=26 style='height:19.5pt'>
+  <td height=26 class=xl115 style='height:19.5pt;border-top:none'>total_deaths_per_million</td>
+  <td class=xl115 style='border-top:none;border-left:none'>Numerical;
+  continuous</td>
+  <td class=xl116 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cumulated number of deaths that occurred each
+  day from the first day per proportion size of 1,000,000.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 style='height:45.0pt' align=left valign=top><!--[if gte vml 1]><v:shape
+   id="Rectangle_x003a__x0020_Rounded_x0020_Corners_x0020_4" o:spid="_x0000_s3075"
+   type="#_x0000_t75" style='position:absolute;margin-left:0;margin-top:8.25pt;
+   width:73.5pt;height:64.5pt;z-index:3;visibility:visible;mso-wrap-style:square;
+   v-text-anchor:top' o:gfxdata="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
+AABWBgAAAAA=
+" o:button="t" o:insetmode="auto">
+   <v:fill o:detectmouseclick="t"/>
+   <v:imagedata src="image011.png" o:title=""/>
+   <o:lock v:ext="edit" aspectratio="f"/>
+   <x:ClientData ObjectType="Pict">
+    <x:SizeWithCells/>
+    <x:FmlaMacro>'Metadata_Extraction-deactivated_macros.htm'!Module3.OpenFile</x:FmlaMacro>
+    <x:CF>Bitmap</x:CF>
+    <x:AutoPict/>
+   </x:ClientData>
+  </v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;
+  position:absolute;z-index:3;margin-left:0px;margin-top:11px;width:98px;
+  height:86px'><img width=98 height=86 src=image012.png v:shapes="Rectangle_x003a__x0020_Rounded_x0020_Corners_x0020_4"></span><![endif]><span
+  style='mso-ignore:vglayout2'>
+  <table cellpadding=0 cellspacing=0>
+   <tr>
+    <td height=60 class=xl113 width=402 style='height:45.0pt;width:302pt'>new_vaccinations</td>
+   </tr>
+  </table>
+  </span></td>
+  <td class=xl113 style='border-left:none'>Numerical; discrete</td>
+  <td class=xl114 width=1300 style='border-left:none;width:975pt'>This is the
+  number of new COVID vaccination doses administered each day. Supposedly this
+  metric is &quot;only calculated for consecutive days&quot;, however, there is
+  bound to be interruption by missing fields throughout this feature. It is
+  equally the sum of <font class="font12">new</font><font class="font0"> people
+  vaccinated (at least once), </font><font class="font12">new</font><font
+  class="font0"> people fully vaccinated, and </font><font class="font12">new</font><font
+  class="font0"> booster doses administered on any particular date because 1)
+  total_vaccinations = people_vaccinated + people_fully_vaccinated +
+  total_boosters, and 2) new_vaccinations' values are cummulated to create the
+  values of the total_vaccinations feature.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>new_vaccinations_smoothed</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of new
+  vaccinations.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl99 style='height:30.0pt;border-top:none'>new_vaccinations_smoothed_per_million</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of new
+  vaccinations per million. <br>
+    </td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl99 style='height:45.0pt;border-top:none'>people_vaccinated</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total (cummulative) number of people who received at
+  least one vaccine dose. This number is not inclusive of people who were fully
+  vaccinated and/or people who received booster doses because
+  total_vaccinations = people_vaccinated + people_fully_vaccinated +
+  total_boosters. Certain vaccines such as Cuba's Abdala vaccine requires 3
+  doses by protocol, and hence, the second administration of this vaccine would
+  be included in this count but not the third/last. Because of this equation,
+  people_vaccinated is also a <font class="font12">cummulative</font><font
+  class="font0"> feature like total_vaccinations is.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>people_vaccinated_per_hundred</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cummulative number of people who received at
+  least one vaccine dose each day from the first day per proportion size of
+  100.<span style='mso-spacerun:yes'> </span></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl99 style='height:45.0pt;border-top:none'>people_fully_vaccinated</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total (cummulative) number of people who (finally)
+  received all doses prescribed by the initial vaccination protocol. This
+  feature is a <font class="font12">cummulative</font><font class="font0">
+  feature like the total_vaccinations feature because of the equation,
+  total_vaccinations = people_vaccinated + people_fully_vaccinated +
+  total_boosters, and hence, each subsequent value in this feature should be
+  equal to or greater than the value before it.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>people_fully_vaccinated_per_hundred</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cummulative number of people who (finally)
+  received all doses (prescribed by the initial vaccination protocol) each day
+  from the first day per proportion size of 100.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl99 style='height:45.0pt;border-top:none'>total_boosters</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total (cummulative) number of vaccination booster
+  doses administered beyond the number prescribed by the vaccination protocol.
+  This feature is a <font class="font12">cummulative</font><font class="font0">
+  feature like the total_vaccinations feature because of the equation,
+  total_vaccinations = people_vaccinated + people_fully_vaccinated +
+  total_boosters, and hence, each subsequent value in this feature should be
+  equal to or greater than the value before it.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>total_boosters_per_hundred</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cummulative number of vaccination booster
+  doses administered (beyond the number prescribed by the vaccination protocol)
+  each day from the first day per proportion size of 100.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl99 style='height:30.0pt;border-top:none'>total_vaccinations</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cummulative COVID vaccination doses
+  administered each day from the first day, in other words, it is the total
+  cummulated number of new vaccinations (from the new_vaccinations feature)
+  administered each day from the first day. It is also the sum of 3 vaccination
+  features: people_vaccinated, people_fully_vaccinated, and
+  total_boosters.<span style='mso-spacerun:yes'> </span></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 class=xl99 style='height:18.75pt;border-top:none'>total_vaccinations_per_hundred</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This is the total cumulative COVID vaccination doses
+  administered each day from the first day per proportion size of 100.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=66 style='mso-height-source:userset;height:49.5pt'>
+  <td height=66 class=xl99 style='height:49.5pt;border-top:none'>new_people_vaccinated_smoothed</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; discrete</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of the daily
+  number of people receiving their first vaccine dose. <br>
+    <br>
+    This is an anomalous feature due to the fact that its base feature,
+  new_people_vaccinated, was not included in the dataset.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=26 style='height:19.5pt'>
+  <td height=26 class=xl115 style='height:19.5pt;border-top:none'>new_people_vaccinated_smoothed_per_hundred</td>
+  <td class=xl115 style='border-top:none;border-left:none'>Numerical;
+  continuous</td>
+  <td class=xl116 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This number denotes the 7-day rolling average of the daily
+  number of people receiving their first vaccine dose per hundred.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=100 style='page-break-before:always;height:75.0pt'>
+  <td height=100 style='height:75.0pt' align=left valign=top><!--[if gte vml 1]><v:shape
+   id="Rectangle_x003a__x0020_Rounded_x0020_Corners_x0020_7" o:spid="_x0000_s3076"
+   type="#_x0000_t75" style='position:absolute;margin-left:0;margin-top:8.25pt;
+   width:73.5pt;height:64.5pt;z-index:4;visibility:visible;mso-wrap-style:square;
+   v-text-anchor:top' o:gfxdata="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
+" o:button="t" o:insetmode="auto">
+   <v:fill o:detectmouseclick="t"/>
+   <v:imagedata src="image013.png" o:title=""/>
+   <o:lock v:ext="edit" aspectratio="f"/>
+   <x:ClientData ObjectType="Pict">
+    <x:SizeWithCells/>
+    <x:FmlaMacro>'Metadata_Extraction-deactivated_macros.htm'!Module5.OpenFile</x:FmlaMacro>
+    <x:CF>Bitmap</x:CF>
+    <x:AutoPict/>
+   </x:ClientData>
+  </v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;
+  position:absolute;z-index:4;margin-left:0px;margin-top:11px;width:98px;
+  height:86px'><img width=98 height=86 src=image014.png v:shapes="Rectangle_x003a__x0020_Rounded_x0020_Corners_x0020_7"></span><![endif]><span
+  style='mso-ignore:vglayout2'>
+  <table cellpadding=0 cellspacing=0>
+   <tr>
+    <td height=100 class=xl113 width=402 style='height:75.0pt;width:302pt'>excess_mortality</td>
+   </tr>
+  </table>
+  </span></td>
+  <td class=xl113 style='border-left:none'>Numerical; continuous</td>
+  <td class=xl114 width=1300 style='border-left:none;width:975pt'>This field
+  represents the p-score which is the percentage difference between the
+  reported number of (weekly or monthly) deaths and the projected number of
+  deaths from previous years for the same period. The calculation for this
+  field is as follows:<span style='mso-spacerun:yes'>  </span><font
+  class="font12">p-score = ((reported_deaths - projected_deaths) /
+  projected_deaths) * 100</font><font class="font0">. If the p-score was 100%
+  in any given period, week or month, then that would mean the death count of
+  that period was double or a 100% higher than the predicted/projected death
+  count of that week. This very feature is essentially the </font><font
+  class="font12">p_proj_all_ages</font><font class="font0"> feature from the
+  excess_mortality.csv file. For more details, the
+  excess_mortality_metadata.pdf file can be referred to.<br>
+    </font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=73 style='mso-height-source:userset;height:54.75pt'>
+  <td height=73 class=xl99 style='height:54.75pt;border-top:none'>excess_mortality_cumulative</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>The p-score being represented in this field is the percentage
+  difference between the cumulative number of deaths since<font class="font12">
+  Jan 01 2020</font><font class="font0"> and the cumulative projected deaths
+  for the same period based on previous years. The calculation for this field
+  is identical to that of the excess_mortality feature except that the </font><font
+  class="font12">operands are cumulative</font><font class="font0">, i.e., this
+  feature is not calculatable from the excess_mortality feature, and hence, it
+  will be treated as a base feature. This feature is essentially the </font><font
+  class="font12">cum_p_proj_all_ages</font><font class="font0"> feature from
+  the excess_mortality.csv file. For more details, the
+  excess_mortality_metadata.pdf file can be referred to.<br>
+    </font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=107 style='mso-height-source:userset;height:80.25pt'>
+  <td height=107 class=xl99 style='height:80.25pt;border-top:none'>excess_mortality_cumulative_absolute</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This field is the cumulative number of excess deaths, or in
+  other words, the cumulative difference between the reported number of deaths
+  since <font class="font12">Jan 01 2020</font><font class="font0"> and the
+  projected number of deaths for the same period based on previous years. The
+  calculation for this field is as follows: </font><font class="font12">excess_deaths
+  = reported_deaths - projected_deaths</font><font class="font0">, with the </font><font
+  class="font12">operands</font><font class="font0"> or the </font><font
+  class="font12">final result</font><font class="font0"> being cumulated from
+  Jan 01 2020. This feature is essentially the </font><font class="font12">cum_excess_proj_all_ages</font><font
+  class="font0"> feature from the excess_mortality.csv file. For more details,
+  the excess_mortality_metadata.pdf file can be referred to.<br>
+    <br>
+    This is an anomalous feature due to the fact that its base feature,
+  excess_mortality_absolute, was not included in the dataset.<br>
+    </font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=48 style='mso-height-source:userset;height:36.0pt'>
+  <td height=48 class=xl115 style='height:36.0pt;border-top:none'>excess_mortality_cumulative_per_million</td>
+  <td class=xl115 style='border-top:none;border-left:none'>Numerical;
+  continuous</td>
+  <td class=xl116 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>This field is the excess_mortality_cumulative_absolute feature's
+  value (cumulative number of excess deaths) per proportion size of 1,000,000.
+  This feature can be calculated from the excess_mortality_cumulative_absolute
+  feature, however, there will be noteworthy variances observed between the
+  provided and calculated features. Either versions may be ideal for analysis.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=111 style='mso-height-source:userset;height:83.25pt'>
+  <td height=111 class=xl113 style='height:83.25pt'>reproduction_rate</td>
+  <td class=xl113 style='border-left:none'>Numerical; continuous</td>
+  <td class=xl114 width=1300 style='border-left:none;width:975pt'>This number
+  is the real-time estimate of the effective reproduction rate. It is also
+  referred to as R naught (<font class="font11">R</font><font class="font10">0</font><font
+  class="font0">) and it measures how fast a virus is spreading, particularly
+  as the average number of individuals who will contract the virus from a
+  single infected person in a population with no immunity. It's calculations is
+  reliant upon 3 factors, 1) the contact rate, 2) the risk or ease of infection
+  upon contact, and 3) the length of time an infected person is contagious.
+  When </font><font class="font11">R</font><font class="font10">0</font><font
+  class="font0"> = 1, each infected person on average will infect one other
+  person and the population will essentially remain unchanged. When </font><font
+  class="font11">R</font><font class="font10">0</font><font class="font0"> &gt;
+  1, the disease is spreading, and when </font><font class="font11">R</font><font
+  class="font10">0</font><font class="font0"> &lt; 1, the virus is declining.
+  Respectively of the latter statement, the larger </font><font class="font11">R</font><font
+  class="font10">0</font><font class="font0"> is from 1, the faster the virus
+  is spreading, and the smaller it is from 1, the more the virus has been
+  contained and is now declining. This number is used by public health
+  officials to understand the spread of a virus in order to determine the
+  measures necessary to deal with the spread.</font></td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=334 style='mso-height-source:userset;height:250.5pt'>
+  <td height=334 class=xl99 style='height:250.5pt;border-top:none'>stringency_index</td>
+  <td class=xl99 style='border-top:none;border-left:none'>Numerical; continuous</td>
+  <td class=xl100 width=1300 style='border-top:none;border-left:none;
+  width:975pt'>Also known as the Government Response Stringency Index, it is
+  essentially the strictness of government policies. The stringency index is a
+  calculation made on any given date by the Oxford Coronavirus Government
+  Response Tracker (OxCGRT) project as the mean of 9 response indicators'
+  out-of-100 scores:<br>
+    <br>
+    1. School closures<br>
+    2. Workplace closures<br>
+    3. Cancellation of public events<br>
+    4. Restrictions on public gatherings<br>
+    5. Closures of public transport<br>
+    6. Stay-at-home requirements<br>
+    7. Public information campaigns<br>
+    8. Restrictions on internal movements<br>
+    9. International travel controls<br>
+    <br>
+    This score is not indicative by any measure of a country's response being
+  better than another's. A higher score simply means a stricter response due to
+  circumstances, with 100 being the highest score. Dependent on the location,
+  if there are variances in policies by sub-region and/or by vaccination
+  status, 1) the index of the strictest sub-region and/or 2) the national
+  weighted average of both vaccinated and non-vaccinated (presumably over the
+  isolated vaccinated or non-vaccinated sets) will be used, respectively.</td>
+  <td colspan=24 style='mso-ignore:colspan'></td>
+ </tr>
+ <![if supportMisalignedColumns]>
+ <tr height=0 style='display:none'>
+  <td width=402 style='width:302pt'></td>
+  <td width=186 style='width:140pt'></td>
+  <td width=1300 style='width:975pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+  <td width=64 style='width:48pt'></td>
+ </tr>
+ <![endif]>
+</table>
+
+</body>
+
+</html>
