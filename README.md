@@ -1,5 +1,5 @@
 # COVID-19_Pandemic_Data
-This data project will be a summary analysis of the main trends and insights observed within the dataset representing the COVID-19 Pandemic.
+This project will outline the main trends and insights found in the COVID-19 Pandemic dataset, providing an introductory-level overview of the dataset.
 
 Data source link: https://ourworldindata.org/covid-deaths
 
