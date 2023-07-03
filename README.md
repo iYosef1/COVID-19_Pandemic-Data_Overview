@@ -3,6 +3,6 @@ This project will outline the main trends and insights found in the COVID-19 Pan
 
 Data source link: https://ourworldindata.org/covid-deaths
 
-Period: Jan 08, 2020 to Mar 29, 2023
+Data collection period: Jan 08, 2020 to Mar 29, 2023
 
 Data file: owid-covid-data
