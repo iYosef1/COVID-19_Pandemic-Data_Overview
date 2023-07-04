@@ -14,7 +14,7 @@ Important! Dates listed below only capture start dates of different aspects of t
 
 Date: April 04, 2023
 
-Stage 1 - Metadata_Extraction.xlsm: Prior to any Exploratory Data Analysis (EDA), a visual review of the dataset was conducted to gain a more contextual understanding of it.
+Stage 1 - Metadata_Report.xlsm: Prior to any Exploratory Data Analysis (EDA), a visual review of the dataset was conducted to gain a more contextual understanding of it.
 A python script alongside ChatGPT's OpenAi library was used to automate a request listing all dataset features (column headers) along with a description of it.
 The response was saved into a text file along with a secondary response that was an output on the python IDLE which was saved manually as another text file.
 The aformentioned text files were named "feature_description" and "feature_list", respectively, and both were used as reference points to better understand the data.
@@ -22,13 +22,13 @@ Creating 2 different reference points of the same dataset features was intention
 As an exercise, both files were used along with the actual dataset to make comparisons. This was followed by further research conducted independently of ChatGPT.
 This was necessary as ChatGPT is known for introducing bias/error in its responses since its training data is reliant upon online data which is suspectible to being false. 
 On that note, ChatGPT is also known for its "hallucinating effect" on both itself and users. For these reasons, it was also necessary to confirm ChatGPT's responses.
-An overview and visual analysis of the data features was recorded in Metadata.xlsx. All files pertaining to this stage are found in the directory, 1_Metadata_Extraction.
-Note that the feature_description.txt file was reformatted throughout the reading. The Metadata_Extraction.xlsm file consists of different sheets representing the different 
+An overview and visual analysis of the data features was recorded in Metadata_Report.xlsm. All files pertaining to this stage are found in the directory, 1_Metadata_Extraction.
+Note that the feature_description.txt file was reformatted throughout the reading. The Metadata_Report.xlsm file consists of different sheets representing the different 
 metadata aspects of our dataset. Upon further researching the dataset features, near the end of analyzing the hospital-related features, OWID's GitHub repository called 
-"covid-19-data" was found. The README.md file within this repo consisted of a description for all of the features of the dataset and it can be found at: 
+"covid-19-data" was stumbled upon. The README.md file within OWID's repo consisted of a description for all of the features of the dataset and it can be found at: 
 https://github.com/owid/covid-19-data/blob/master/public/data/README.md. Upon completing the hospital-features analysis, this file was utilized as a 3rd reference point 
 during the compilation of the metadata file. The 1_Metadata_Extraction directory also contains 7 analyses that were crucial in the extraction of metadata. The additional
-files associated with excess mortalities were utilized in Metadata_analysis_5.xlsx.
+files associated with excess mortalities were specifically utilized in Metadata_analysis_5.xlsx.
 
 Completion Date: May 24, 2023
 
