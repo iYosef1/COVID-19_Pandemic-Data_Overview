@@ -8,7 +8,7 @@ CREATE TABLE data_load (
     iso_code VARCHAR(244),
     continent VARCHAR(244),
     location VARCHAR(244),
-    date_ VARCHAR(244),
+    _date_ VARCHAR(244),
     total_cases	VARCHAR(244),
     new_cases VARCHAR(244),
     new_cases_smoothed VARCHAR(244),
@@ -113,6 +113,7 @@ IGNORE 1 LINES;
 -- Right-click on "MySQL80" > Restart or Refresh
 
 -- Success! The LOAD DATA INFILE approach ran without error.
+-- Moving forward, the queries run will predominantly work with the data_load table.
 
 
 

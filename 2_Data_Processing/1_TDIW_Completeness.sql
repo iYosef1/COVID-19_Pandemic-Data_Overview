@@ -1,16 +1,16 @@
 -- Table Data Import Wizard Approach - Completeness Check:
 
-SELECT * FROM master_dataset;
+SELECT * FROM wizard_import_data;
 
 -- The dataset is comprised of 67 features and 299,237 records in total.
 
 -- Confirmation of 67 Columns Created in Table:
 SELECT COUNT(*) AS column_count -- Result = 67
 FROM information_schema.COLUMNS
-WHERE TABLE_SCHEMA = 'owid_covid_data' AND TABLE_NAME = 'master_dataset';
+WHERE TABLE_SCHEMA = 'owid_covid_data' AND TABLE_NAME = 'wizard_import_data';
 
 -- Confirmation of 299,237 Records Created in Table:
-SELECT COUNT(*) FROM master_dataset;
+SELECT COUNT(*) FROM wizard_import_data;
 
 
 -- Note: The nulls in this dataset are empty strings; NULLS and empty strings may be used synonymously in the SQL comments.
@@ -18,7 +18,7 @@ SELECT
     COUNT(CASE WHEN iso_code = '' THEN 1 END) AS iso_code_NULLS,
     COUNT(CASE WHEN continent = '' THEN 1 END) AS continent_NULLS,
     COUNT(CASE WHEN location = '' THEN 1 END) AS location_NULLS,
-    COUNT(CASE WHEN date_ = '' THEN 1 END) AS date__NULLS,
+    COUNT(CASE WHEN _date_ = '' THEN 1 END) AS _date_NULLS,
     COUNT(CASE WHEN total_cases = '' THEN 1 END) AS total_cases_NULLS,
     COUNT(CASE WHEN new_cases = '' THEN 1 END) AS new_cases_NULLS,
     COUNT(CASE WHEN new_cases_smoothed = '' THEN 1 END) AS new_cases_smoothed_NULLS,
@@ -82,7 +82,7 @@ SELECT
     COUNT(CASE WHEN excess_mortality_cumulative = '' THEN 1 END) AS excess_mortality_cumulative_NULLS,
     COUNT(CASE WHEN excess_mortality = '' THEN 1 END) AS excess_mortality_NULLS,
     COUNT(CASE WHEN excess_mortality_cumulative_per_million = '' THEN 1 END) AS excess_mortality_cumulative_per_million_NULLS
-FROM master_dataset;
+FROM wizard_import_data;
 
 
 -- The following calculation is completed using the record of numbers copied from the previous query:
@@ -91,5 +91,5 @@ SELECT 0 + 14234 + 0 + 0 + 35883 + 8633 + 9897 + 56008 + 8551 + 9781 + 35883 + 8
 AS total; -- This calculation returned 9614540.
 
 -- As per the Metadata_Report, the total number of empty fields is 9,614,540.
--- Success! The dataset was successfully imported into the master_dataset table.
+-- Success! The dataset was successfully imported into the wizard_import_data table.
 

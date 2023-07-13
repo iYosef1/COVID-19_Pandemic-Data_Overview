@@ -4,11 +4,11 @@ As per the previous analysis, there may be an issue with data features, the data
 The queries that follow will delve into each of these to discover the root cause.
 */
 
--- Type-casting the excess_mortality_cumulative_per_million from the master_dataset: 
-SELECT location, date_, CAST(excess_mortality_cumulative_per_million AS DECIMAL(30, 30)) AS same_feature_different_table
-FROM master_dataset
+-- Type-casting the excess_mortality_cumulative_per_million from the wizard_import_data: 
+SELECT location, _date_, CAST(excess_mortality_cumulative_per_million AS DECIMAL(30, 30)) AS same_feature_different_table
+FROM wizard_import_data
 ORDER BY excess_mortality_cumulative_per_million DESC;
--- This issue persists in the master_dataset table as well, narrowing down the issue to most likely be residing in the data features or the data-types being casted.
+-- This issue persists in the wizard_import_data table as well, narrowing down the issue to most likely be residing in the data features or the data-types being casted.
 
 
 /* Features with continuous numerical values:
@@ -25,9 +25,9 @@ These are a few of the features with continuous numerical values:
 There needs to be multiple whole digits with variances between the number of whole digits to ascertain that the numerical values are being incorrectly sorted.
 For confirmation, running the query below will show that the positive_rate values are being correctly sorted in spite of being string values.
 */
-SELECT location, date_, positive_rate, CAST(positive_rate AS DECIMAL(5, 5)) AS casted_positive_rate, 
+SELECT location, _date_, positive_rate, CAST(positive_rate AS DECIMAL(5, 5)) AS casted_positive_rate, 
 CASE WHEN positive_rate = CAST(positive_rate AS DECIMAL(5, 5)) THEN "True" ELSE "False" END AS "T_or_F"
-FROM master_dataset
+FROM wizard_import_data
 ORDER BY positive_rate ASC; -- Substitute the "positive_rate", following the ORDER BY clause, with "T_or_F"  to confirm there is only 1 False value in the T_or_F column.
 -- Note that the query above is being sorted in DESC order by positive_rate and NOT by casted_positive_rate and yet the sorted order is numerically correct.
 
@@ -42,15 +42,15 @@ Based on previous queries as well, it is reasonable to assume that casting the D
 -- The following 2 queries demonstrate the correct output once the data-type arguments were readjusted:
 
 -- 1)
-SELECT location, date_, excess_mortality_cumulative_per_million, CAST(excess_mortality_cumulative_per_million AS DECIMAL(60, 30)) AS casted_excess_mortality_cumulative_per_million,
+SELECT location, _date_, excess_mortality_cumulative_per_million, CAST(excess_mortality_cumulative_per_million AS DECIMAL(60, 30)) AS casted_excess_mortality_cumulative_per_million,
 CASE WHEN excess_mortality_cumulative_per_million = CAST(excess_mortality_cumulative_per_million AS DECIMAL(60, 30)) THEN "True" ELSE "False" END AS "T_or_F"
-FROM master_dataset
+FROM wizard_import_data
 ORDER BY T_or_F ASC; -- There are no False values in the T_or_F column; the excess_mortality_cumulative_per_million feature was correctly type-casted.
 
 -- 2)
-SELECT location, date_, positive_rate, CAST(positive_rate AS DECIMAL(10, 5)) AS casted_positive_rate, 
+SELECT location, _date_, positive_rate, CAST(positive_rate AS DECIMAL(10, 5)) AS casted_positive_rate, 
 CASE WHEN positive_rate = CAST(positive_rate AS DECIMAL(10, 5)) THEN "True" ELSE "False" END AS "T_or_F"
-FROM master_dataset
+FROM wizard_import_data
 ORDER BY T_or_F ASC; -- There are no False values in the T_or_F column; the positive_rate feature was correctly type-casted.
 
 -- IMPORTANT! The DECIMAL data-type has 2 parameters but the arguments were not implemented correctly. 
@@ -117,35 +117,34 @@ These are a few of the features with discrete numerical values:
 */
 
 -- In the following query of type-casting, there are no False values, i.e., INT is an appropriate data-type for the new_cases feature.
-SELECT location, date_, new_cases, CAST(new_cases AS UNSIGNED INT) AS casted_new_cases,
+SELECT location, _date_, new_cases, CAST(new_cases AS UNSIGNED INT) AS casted_new_cases,
 CASE WHEN new_cases = CAST(new_cases AS UNSIGNED INT) THEN "True" ELSE "False" END AS T_or_F
-FROM master_dataset
+FROM wizard_import_data
 ORDER BY T_or_F ASC; 
 
 
 -- The new_cases feature consists of 8,633 NULLS or empty strings 
 SELECT COUNT(new_cases)
-FROM master_dataset
+FROM wizard_import_data
 WHERE new_cases = '';
  
 -- The zeroes are being correctly type-casted as zeroes.
-SELECT location, date_, new_cases, CAST(new_cases AS UNSIGNED INT) AS casted_new_cases,
+SELECT location, _date_, new_cases, CAST(new_cases AS UNSIGNED INT) AS casted_new_cases,
 CASE WHEN new_cases = CAST(new_cases AS UNSIGNED INT) THEN "True" ELSE "False" END AS T_or_F
-FROM master_dataset
+FROM wizard_import_data
 ORDER BY casted_new_cases ASC; 
 
 -- In spite of T_or_F consisting entirely of True values, the NULLS have been type-casted as 0s. This needs to accounted for when altering the features.
-SELECT location, date_, new_cases, CAST(new_cases AS UNSIGNED INT) AS casted_new_cases,
+SELECT location, _date_, new_cases, CAST(new_cases AS UNSIGNED INT) AS casted_new_cases,
 CASE WHEN new_cases = CAST(new_cases AS UNSIGNED INT) THEN "True" ELSE "False" END AS T_or_F
-FROM master_dataset
+FROM wizard_import_data
 WHERE new_cases = ''
 ORDER BY casted_new_cases ASC; 
 
 
 
 -- Next Steps:
--- 1) The MAX field length of every feature in the dataset will be queried before determining the appropriate data-type conversion for each feature.
--- 2) Automate via python the SQL queries for typecasting with data-types determined from 1) and confirm the type-casted fields are equivalent to the original VARCHAR fields with a Boolean feature.
--- 3) Apply the ALTER TABLE query to update the entire table with the appropriate data-types. Reorder the features according to the feature categorization completed in the Metadata Report.
---    Note: When altering the entire table from VARCHAR, the empty strings need to be converted into NULLS, not into 0s as it is the case when type-casting.
+-- 1. The appropriate MAX field length of every feature in the dataset will be queried before determining the appropriate data-type conversion for each feature.
+-- 2. Automate via python the SQL queries for typecasting with data-types determined from step 1. 
+
 

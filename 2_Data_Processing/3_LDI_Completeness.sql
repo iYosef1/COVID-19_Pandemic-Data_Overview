@@ -18,7 +18,7 @@ SELECT
     COUNT(CASE WHEN iso_code = '' THEN 1 END) AS iso_code_NULLS,
     COUNT(CASE WHEN continent = '' THEN 1 END) AS continent_NULLS,
     COUNT(CASE WHEN location = '' THEN 1 END) AS location_NULLS,
-    COUNT(CASE WHEN date_ = '' THEN 1 END) AS date__NULLS,
+    COUNT(CASE WHEN _date_ = '' THEN 1 END) AS _date_NULLS,
     COUNT(CASE WHEN total_cases = '' THEN 1 END) AS total_cases_NULLS,
     COUNT(CASE WHEN new_cases = '' THEN 1 END) AS new_cases_NULLS,
     COUNT(CASE WHEN new_cases_smoothed = '' THEN 1 END) AS new_cases_smoothed_NULLS,
@@ -86,7 +86,7 @@ FROM data_load;
 
 
 -- iso_code, location, date, population, and excess_mortality_cumulative_per_million are the only features that have a NULL COUNT of 0.
--- The remaining features had the correct COUNT of NULLS, congruent with the master_dataset's COUNTS.
+-- The remaining features had the correct COUNT of NULLS, congruent with the wizard_import_data's COUNTS.
 
 -- According to the excerpt query below, the COUNT of excess_mortality_cumulative_per_million_NULLS = 0
 SELECT COUNT(CASE WHEN excess_mortality_cumulative_per_million = '' THEN 1 END) as excess_mortality_cumulative_per_million_NULLS
@@ -98,10 +98,10 @@ FROM data_load;
 -- In the owid-covid-data.csv file, this feature consists of many empty fields or NULLS, and hence, the number of NULLS cannot be 0 as per the count associated with the LOAD DATA INFILE approach.
 -- Each of the 67 features has a VARCHAR data type, however, excess_mortality_cumulative_per_million is the only feature that is incorrectly returning a NULL COUNT of 0.
 
-SELECT location, date_, excess_mortality_cumulative_per_million FROM data_load -- Query_Anomaly_A: This query does NOT exclusively return the values that are NOT NULL, i.e., it returns all values.
+SELECT location, _date_, excess_mortality_cumulative_per_million FROM data_load -- Query_Anomaly_A: This query does NOT exclusively return the values that are NOT NULL, i.e., it returns all values.
 WHERE excess_mortality_cumulative_per_million IS NOT NULL;
 
-SELECT location, date_, excess_mortality_cumulative_per_million FROM data_load -- Query_Anomaly_B: This query also does NOT exclusively return the values that are NOT NULL, i.e., it returns all values.
+SELECT location, _date_, excess_mortality_cumulative_per_million FROM data_load -- Query_Anomaly_B: This query also does NOT exclusively return the values that are NOT NULL, i.e., it returns all values.
 WHERE excess_mortality_cumulative_per_million != '';
 
 -- According to Query_Anomaly_A, Query_Anomaly_B, and the COUNT of excess_mortality_cumulative_per_million_NULLS being 0, the following can be concluded:
@@ -109,7 +109,7 @@ WHERE excess_mortality_cumulative_per_million != '';
 
 
 -- Success! This query exclusively returns all values that are NOT NULL.
-SELECT location, date_, excess_mortality_cumulative_per_million FROM data_load 
+SELECT location, _date_, excess_mortality_cumulative_per_million FROM data_load 
 WHERE excess_mortality_cumulative_per_million LIKE '%.%'; -- As per the Metadata_Report, this feature consists of continuous values, i.e., each value has a decimal point.                     
 
 SELECT COUNT(excess_mortality_cumulative_per_million) FROM data_load -- The output of this query is the number of values that are NOT NULL which is 10,295.
