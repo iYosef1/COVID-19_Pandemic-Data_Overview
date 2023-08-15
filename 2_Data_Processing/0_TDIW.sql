@@ -47,7 +47,7 @@ CREATE DATABASE owid_covid_data;
 -- Error Code: 1118. Row size too large. The maximum row size for the used table type, not counting BLOBs, is 65535. 
 -- This includes storage overhead, check the manual. You have to change some columns to TEXT or BLOBs
 
--- SHOW TABLE STATUS LIKE 'master_dataset'; -- 'Data_length' is 16,384 bytes, the maximum bytes per column in this table.
+-- SHOW TABLE STATUS LIKE 'wizard_import_data'; -- 'Data_length' is 16,384 bytes, the maximum bytes per column in this table.
 
 -- The maximum row size in InnoDB for an entire table is 65,535 bytes. 
 -- There are 67 features, and hence, each feature can have a row size (or 'Data_length') of no more than 978 bytes.
@@ -55,11 +55,11 @@ CREATE DATABASE owid_covid_data;
 -- Therefore, the VARCHAR datatype must be readjusted to 244 characters.
 
 
-CREATE TABLE master_dataset (
+CREATE TABLE wizard_import_data (
     iso_code VARCHAR(244),
     continent VARCHAR(244),
     location VARCHAR(244),
-    date_ VARCHAR(244),
+    _date_ VARCHAR(244),
     total_cases	VARCHAR(244),
     new_cases VARCHAR(244),
     new_cases_smoothed VARCHAR(244),
@@ -130,11 +130,11 @@ CREATE TABLE master_dataset (
 /*    
 SELECT SUM(CHARACTER_OCTET_LENGTH) AS Max_Row_Size -- Result = 65,392 bytes < Limit = 65,535 bytes -- use '*' to view all default table parameters
 FROM information_schema.COLUMNS
-WHERE TABLE_SCHEMA = 'owid_covid_data' AND TABLE_NAME = 'master_dataset';
+WHERE TABLE_SCHEMA = 'owid_covid_data' AND TABLE_NAME = 'wizard_import_data';
 */
 
 
--- The 'master_dataset' table was successfully created. 
+-- The 'wizard_import_data' table was successfully created. 
 -- For future reference, the metadata extraction should always include the MAX and MIN number of characters within a field for every feature of the dataset.
 -- This would allow for setting the ideal datatype limits when creating a SQL table.
 -- Otherwise, the excess amount of space that is not in use may impact the database's storage efficiency or performance.

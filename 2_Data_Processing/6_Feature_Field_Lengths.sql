@@ -72,7 +72,7 @@ The DOUBLE data-type is always more preferable even though it can also return un
 /* INT Data-type
 
 This data-type is used for exact numbers, i.e., it will never loose precision, even when doing calculations. 
-The UNSIGNED or SIGNED constraint will allow the values to be either exclusively positive OR to be positive and negative.
+The UNSIGNED or SIGNED constraint will allow the values to be respectively either exclusively positive OR to be positive and negative.
 The argument passed into any INT data-type is referred to as the display width. It is the number of characters available that makes up the width of a number.
 For example, when data is stored within INT(5), the the number 49 would be stored as 00049 and the number 150 would be stored as 00150.
 It does not dynamically store the number of digits or characters as VARCHAR does. It is more similar to the CHAR data-type but is padded with leading 0s.
@@ -89,7 +89,53 @@ This data-type has its own convention for dates in MySQL; YYYY-MM-DD, e.g., '202
 
 
 
--- The following queries serve as test data with arbitrary but intentional values for comfirming success in varying case scenarios for the appropriate digit counts:
+-- Building Query for Categorical Features:
+
+-- Sample feature being used: iso_code
+
+-- Returns the MAX character length in iso_code feature:
+SELECT MAX(LENGTH(iso_code)) AS max_len_of_iso_code FROM data_load;
+
+-- Returns ALL fields in iso_code feature with MAX character length (including duplicates):
+SELECT iso_code AS ALL_iso_codes_with_max_len FROM data_load
+WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM data_load);
+
+-- Returns all distinct fields in iso_code feature with MAX character length, plus the length in itself:
+SELECT DISTINCT(iso_code) AS max_len_iso_code, 
+	   LENGTH(iso_code) AS len 
+FROM data_load
+WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM data_load);
+
+
+
+-- Building Query for Numerically Discrete Features - INT Data-type:
+
+-- Sample feature being used: new_cases
+-- Query Objective: Provides the MAX count of the number of whole-number digits from a list of whole numbers for the INT data-types' parameter. 
+
+-- Returns the MAX character length in new_cases feature:
+SELECT DISTINCT(new_cases) AS max_len_new_cases, LENGTH(new_cases) AS total_char_len FROM data_load
+WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM data_load);
+
+-- Confirms if field in new_cases feature is a whole number and returns character length of whole digits:
+SELECT DISTINCT(new_cases) AS max_len_new_cases, 
+			   LENGTH(new_cases) AS total_char_len, 
+			   SUBSTRING_INDEX(new_cases, '.', -1) AS decimal_digits, 
+			   CASE WHEN CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS UNSIGNED INT) > 0 THEN "False" ELSE "True" END AS whole_number, 
+			   CASE
+				   WHEN new_cases LIKE '%.%' THEN (CASE WHEN new_cases LIKE '%.0' THEN LENGTH(SUBSTRING_INDEX(new_cases, '.', 1)) END) 
+				   ELSE LENGTH(new_cases) 
+				   END AS MAX_length_whole_digits
+FROM data_load
+WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM data_load);    
+-- Varying Cases for Consideration - A reusable query with flexibility is always ideal:
+-- A value can have more than 1 trailing zero after the decimal pt.
+-- A value may not have decimal point.
+-- A feature of discrete numerical values can be negative as well as positive. 
+-- A feature supposedly of discrete numerical values only may in error consist of decimal values as well. 
+
+
+-- The subsequent 2 commands below serve as test data with arbitrary but intentional values for comfirming success in varying case scenarios for the appropriate digit-counts for numerical data-types:
 
 CREATE TABLE feature_len_query_testing_table (
 	category_col_check VARCHAR(100),
@@ -120,567 +166,3055 @@ SELECT * FROM feature_len_query_testing_table;
 
 -- DROP TABLE feature_len_query_testing_table; -- The feature_len_query_testing_table can be discarded.
 
--- Queries all whole numbers, inclusive of whole numbers with trailing 0s following a decimal point, to return the fields with max number character length along with the character length as well. 
--- If the values in the column consist of a decimal, there must be a numerical character before and after the decimal point. 
+-- Confirms if varying fields are whole numbers and returns character length of whole digits in field:
 SELECT DISTINCT(num_discrete_col_check) AS max_len_num_discrete, 
-				LENGTH(num_discrete_col_check) AS total_len, 
+				LENGTH(num_discrete_col_check) AS total_char_len, 
 				SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS whole_digits,
 				CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT) AS whole_digits_casted, 
-                LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) AS Length_whole_digits_casted, 
-				SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS dec_digits, -- whole numbers with no decimal digits (even trailing zeroes) return the whole number
-				CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0 AS dec_digits_greater_than_0, 
-CASE
-	WHEN num_discrete_col_check LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) END) -- A value can have more than 1 trailing zero, check if string of decimal digits = 0
-    ELSE LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) -- remove this line?? Need condition for when decimal DNE in string??
-    END AS MAX_length_whole_digits
+                LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) AS char_length_leftside_of_decimal, 
+				SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS decimal_digits, 
+				CASE WHEN CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END AS whole_number, 
+				CASE
+					WHEN num_discrete_col_check LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) END)
+					ELSE LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT))
+					END AS MAX_length_whole_number
 FROM feature_len_query_testing_table
 WHERE LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT))) FROM feature_len_query_testing_table);
--- ORDER BY max_len_num_discrete; -- Whole numbers in string format will still be sorted correctly in ASC or DESC numerical order by whole digits first, then decimal digits, if they have the same number of digits. 
--- Note: The -ve values added to the sample data altering the results of the query. Try SIGNED INT instead of UNSIGNED INT!!! -- This worked but the -ve signs are being counted as a character!!!
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+-- Query Issues:
+-- The count also includes the negative sign in front of negative numbers.
+-- Whole numbers without a decimal point and trailing zero(es), return the whole number digits in the decimal_digits field.
 
-    
--- COPY!!!
-  SELECT DISTINCT(num_discrete_col_check) AS max_len_num_discrete, 
-				LENGTH(num_discrete_col_check) AS total_len, 
+
+-- Query Completed Below!
+-- The following query returns all field entries with the MAX number of whole digits, along with the character length itself from a feature exclusively of whole numbers, inclusive of whole numbers with a decimal point and trailing 0s. 
+-- If the values in the column consist of a decimal, there must be a numerical character before and after the decimal point. 
+-- This query is reusable for any numerically discrete feature to determine the size parameter necessary for the INT data-type to be used for data conversion. 
+SELECT DISTINCT(num_discrete_col_check) AS max_len_num_discrete, 
+				LENGTH(num_discrete_col_check) AS total_char_len, 
 				SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS whole_digits,
-				CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS UNSIGNED INT) AS whole_digits_casted, 
-                LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS UNSIGNED INT)) AS Length_whole_digits_casted, 
-				SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS dec_digits, -- whole numbers with no decimal digits (even trailing zeroes) return the whole number
-				CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS UNSIGNED INT) > 0 AS dec_digits_greater_than_0, 
-CASE
-	WHEN num_discrete_col_check LIKE '%.%' THEN (CASE WHEN num_discrete_col_check LIKE '%.0' THEN LENGTH(SUBSTRING_INDEX(num_discrete_col_check, '.', 1)) END) -- A value can have more than 1 trailing zero, check for sum of decimal digits < 0
-    ELSE LENGTH(num_discrete_col_check) -- remove this line?? Need condition for when decimal DNE in string??
-    END AS MAX_length_whole_digits
-FROM feature_len_query_testing_table;
--- WHERE LENGTH(num_discrete_col_check) = (SELECT MAX(LENGTH(num_discrete_col_check)) FROM feature_len_query_testing_table)
--- ORDER BY whole_number; -- Whole numbers in string format will still be sorted correctly in ASC or DESC order.   
+				CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT) AS whole_digits_casted, 
+                LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) AS char_length_leftside_of_decimal, 
+				CASE WHEN num_discrete_col_check NOT LIKE "%.%" THEN "N/A" ELSE SUBSTRING_INDEX(num_discrete_col_check, '.', -1) END AS decimal_digits, 
+                
+				CASE 
+					WHEN num_discrete_col_check LIKE "%.%" THEN 
+                    (CASE WHEN CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+                    ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN num_discrete_col_check LIKE '-%' THEN 
+                    (CASE 
+						WHEN num_discrete_col_check LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE 
+						WHEN num_discrete_col_check LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+FROM feature_len_query_testing_table
+
+WHERE CASE	
+		WHEN num_discrete_col_check LIKE '-%' THEN 
+			(CASE 
+				WHEN num_discrete_col_check LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) - 1) END) 
+				ELSE (LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) - 1) END)
+					
+		ELSE 
+			(CASE 
+				WHEN num_discrete_col_check LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) END)
+				ELSE LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT)) END)
+	  
+      END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(num_discrete_col_check, '.', 1) AS SIGNED INT))) 
+			 FROM feature_len_query_testing_table 
+             WHERE num_discrete_col_check NOT LIKE '-%')
+         
+ORDER BY max_len_num_discrete; 
+-- Note: Whole numbers in string format will still be sorted correctly in ASC or DESC numerical order by whole digits first, then decimal digits, if they have the same number of digits. 
+ 
+ 
+-- Finalizing Completed Query: 
+-- Sample feature being used: new_cases    
+SELECT DISTINCT(new_cases) AS max_len_num_discrete, 
+				CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT) AS whole_digits_casted, 
+				CASE WHEN new_cases NOT LIKE "%.%" THEN "N/A" ELSE SUBSTRING_INDEX(new_cases, '.', -1) END AS decimal_digits, 
+                
+				CASE 
+					WHEN new_cases LIKE "%.%" THEN 
+                    (CASE WHEN CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+                    ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN new_cases LIKE '-%' THEN 
+                    (CASE 
+						WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE 
+						WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+FROM data_load
+
+WHERE CASE	
+		WHEN new_cases LIKE '-%' THEN 
+			(CASE 
+				WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END) 
+				ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END)
+					
+		ELSE 
+			(CASE 
+				WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+				ELSE LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+	  
+      END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT))) 
+			 FROM data_load 
+             WHERE new_cases NOT LIKE '-%')
+
+ORDER BY whole_number ASC; 
+-- Ordering whole_number in ASC order will reveal any "False" values at the top of the list.
+
+
+
+-- Building Query for Numerically Continuous Features - DECIMAL Data-type:
+
+-- Query Objective: a) Provides the MAX count of the total number of digits from a list of numbers for the precision parameter of the DECIMAL data-type.
+				 -- b) Provides the MAX count exclusively of the number of decimal digits from a list of numbers for the scale parameter of the DECIMAL data-type. 
+                 
+-- Testing the following query for a):
+SELECT DISTINCT(num_continuous_col_check) AS max_len_num_continuous, 
+				CAST(num_continuous_col_check AS DECIMAL(10, 5)) AS decimal_number_casted, -- Note that DECIMAL data-type does not require UNSIGNED or SIGNED keyword.
+				LENGTH(num_continuous_col_check) AS total_char_len,
+                
+				CASE WHEN num_continuous_col_check LIKE "-%.%" THEN (LENGTH(num_continuous_col_check) - 2) 
+					 WHEN num_continuous_col_check LIKE "-%" THEN (LENGTH(num_continuous_col_check) - 1)
+                     WHEN num_continuous_col_check LIKE "%.%" THEN (LENGTH(num_continuous_col_check) - 1) 
+                     ELSE LENGTH(num_continuous_col_check) END AS total_digit_len, 
+                     
+				CASE 
+					WHEN num_continuous_col_check LIKE "%.%" THEN 
+                    (CASE WHEN CAST(SUBSTRING_INDEX(num_continuous_col_check, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+                    ELSE "False" END AS decimal_number
+
+FROM feature_len_query_testing_table
+
+WHERE CASE WHEN num_continuous_col_check LIKE "-%.%" THEN (LENGTH(num_continuous_col_check) - 2) 
+		   WHEN num_continuous_col_check LIKE "-%" THEN (LENGTH(num_continuous_col_check) - 1)
+		   WHEN num_continuous_col_check LIKE "%.%" THEN (LENGTH(num_continuous_col_check) - 1) 
+		   ELSE LENGTH(num_continuous_col_check) 
+	  
+      END = (SELECT MAX(CASE WHEN num_continuous_col_check LIKE "-%.%" THEN (LENGTH(num_continuous_col_check) - 2) 
+					         WHEN num_continuous_col_check LIKE "-%" THEN (LENGTH(num_continuous_col_check) - 1)
+		                     WHEN num_continuous_col_check LIKE "%.%" THEN (LENGTH(num_continuous_col_check) - 1) 
+		                     ELSE LENGTH(num_continuous_col_check) END)
+			 FROM feature_len_query_testing_table)
+         
+ORDER BY decimal_number ASC; -- Query is ordered in ASC by decimal_number to reveal any False fields in the list at the top.
+
+
+-- Testing the following query for b):
+SELECT DISTINCT(num_continuous_col_check) AS max_len_num_continuous, 
+
+				CASE WHEN num_continuous_col_check NOT LIKE "%.%" THEN "N/A" ELSE SUBSTRING_INDEX(num_continuous_col_check, '.', -1) END AS decimal_digits, 
+                CASE WHEN num_continuous_col_check NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(num_continuous_col_check, '.', -1)) END AS decimal_digits_len, 
+                
+				CASE 
+					WHEN num_continuous_col_check LIKE "%.%" THEN 
+                    (CASE WHEN CAST(SUBSTRING_INDEX(num_continuous_col_check, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+                    ELSE "False" END AS decimal_number
+
+FROM feature_len_query_testing_table
     
+WHERE CASE WHEN num_continuous_col_check NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(num_continuous_col_check, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN num_continuous_col_check NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(num_continuous_col_check, '.', -1)) END)
+			 FROM feature_len_query_testing_table)
+
+ORDER BY decimal_number ASC; -- Query is ordered in ASC by decimal_number to reveal any False fields in the list at the top.
+
+
+
+-- Sample feature being used: new_cases_smoothed
+
+-- a) MAX Total Number of Digits in Field:
+SELECT DISTINCT(new_cases_smoothed) AS max_len_num_continuous, 
+				LENGTH(new_cases_smoothed) AS total_char_len,
+                
+				CASE WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+					 WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+                     WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+                     ELSE LENGTH(new_cases_smoothed) END AS total_digit_len, 
+                     
+				CASE 
+					WHEN new_cases_smoothed LIKE "%.%" THEN 
+                    (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+                    ELSE "False" END AS decimal_number
+
+FROM data_load
+
+WHERE CASE WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+		   WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+		   WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+		   ELSE LENGTH(new_cases_smoothed) 
+	  
+      END = (SELECT MAX(CASE WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+					         WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+		                     WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+		                     ELSE LENGTH(new_cases_smoothed) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC; -- Query is ordered in ASC by decimal_number to reveal any False fields in the list at the top.
+
+
+-- b) MAX Number of Decimal Digits in Field:
+SELECT DISTINCT(new_cases_smoothed) AS max_len_num_continuous, 
+
+				CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "N/A" ELSE SUBSTRING_INDEX(new_cases_smoothed, '.', -1) END AS decimal_digits, 
+                CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)) END AS decimal_digits_len, 
+                
+				CASE 
+					WHEN new_cases_smoothed LIKE "%.%" THEN 
+                    (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+                    ELSE "False" END AS decimal_number
+
+FROM data_load
     
+WHERE CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC; -- Query is ordered in ASC by decimal_number to reveal any False fields in the list at the top.
+
+
+
+-- To summarize, the following queries will form the basis or columns for extracting the data-type arguments for data-type conversion:
+
+-- Max Character Length Fields in Categorical Features:
+SELECT DISTINCT(iso_code) AS max_len_iso_code, 
+	   LENGTH(iso_code) AS len 
+FROM data_load
+WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM data_load);
+
+-- Max Character Length Fields in Numerically Discrete Features:
+SELECT DISTINCT(new_cases) AS max_len_num_discrete, 
+				CASE 
+					WHEN new_cases LIKE "%.%" THEN 
+                    (CASE WHEN CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+                    ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN new_cases LIKE '-%' THEN 
+                    (CASE 
+						WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE 
+						WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+FROM data_load
+
+WHERE CASE	
+		WHEN new_cases LIKE '-%' THEN 
+			(CASE 
+				WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END) 
+				ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END)
+					
+		ELSE 
+			(CASE 
+				WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+				ELSE LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+	  
+        END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT))) 
+			  FROM data_load 
+              WHERE new_cases NOT LIKE '-%')
+
+ORDER BY whole_number ASC; 
+
+
+-- Max Character Length Fields in Numerically Continuous Features:
+-- a) MAX Total Number of Digits in Field:
+SELECT DISTINCT(new_cases_smoothed) AS max_len_num_continuous, 
+	   LENGTH(new_cases_smoothed) AS total_char_len,
+	   CASE 
+	       WHEN new_cases_smoothed LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+	   CASE 
+		   WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+		   WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+		   WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+		   ELSE LENGTH(new_cases_smoothed) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+		   WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+		   WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+		   ELSE LENGTH(new_cases_smoothed) 
+	  
+      END = (SELECT MAX(CASE WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+					         WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+		                     WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+		                     ELSE LENGTH(new_cases_smoothed) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC; -- Query is ordered in ASC by decimal_number to reveal any False fields in the list at the top.
+
+-- b) MAX Number of Decimal Digits in Field:
+SELECT DISTINCT(new_cases_smoothed) AS max_len_num_continuous, 
+	   CASE 
+	       WHEN new_cases_smoothed LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+	   CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+WHERE CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC; -- Query is ordered in ASC by decimal_number to reveal any False fields in the list at the top.
 
 
 
-
-
--- Building Query for Categorical Features:
-
--- Sample feature being used: iso_code
-
--- Returns the MAX character length in iso_code feature:
-SELECT MAX(LENGTH(iso_code)) AS max_len_of_iso_code FROM master_dataset;
-
--- Returns ALL fields in iso_code feature with MAX character length (including duplicates):
-SELECT iso_code AS ALL_iso_codes_with_max_len FROM master_dataset
-WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM master_dataset);
-
--- Returns all distinct fields in iso_code feature with MAX character length, plus the length in itself:
-SELECT DISTINCT(iso_code) AS max_len_iso_code, LENGTH(iso_code) AS len FROM master_dataset
-WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM master_dataset);
-
-
-
--- Building Query for Numerically Discrete Features:
-
--- Sample feature being used: new_cases
-
--- Returns the MAX character length in new_cases feature:
-SELECT DISTINCT(new_cases) AS max_len_new_cases, LENGTH(new_cases) AS len FROM master_dataset
-WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM master_dataset);
-
-SELECT DISTINCT(new_cases) AS max_len_new_cases, LENGTH(new_cases) AS total_len, SUBSTRING_INDEX(new_cases, '.', -1), CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS UNSIGNED INT) > 0 AS whole_number, 
-CASE
-	WHEN new_cases LIKE '%.%' THEN (CASE WHEN new_cases LIKE '%.0' THEN LENGTH(SUBSTRING_INDEX(new_cases, '.', 1)) END) -- A value can have more than 1 trailing zero, check for sum of decimal digits < 0
-    ELSE LENGTH(new_cases) -- remove this line?? Need condition for when decimal DNE in string
-    END AS MAX_length_whole_digits
-FROM master_dataset
-WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM master_dataset)
-ORDER BY whole_number; -- Whole numbers in string format will still be sorted correctly in ASC or DESC order. 
-
-
-
-
-
-
--- The following queries will form the basis or columns for extracting data-type arguments for data-type conversion:
-
--- Max Character Length Fields in Categorical Feature:
-SELECT DISTINCT(CONCAT(iso_code, '; ', LENGTH(iso_code))) AS max_len_iso_code FROM master_dataset
-WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM master_dataset);
-
--- Max Character Length Fields in Numerically Discrete & Continuous Features:
-SELECT DISTINCT(CONCAT(new_cases_smoothed, '; ', LENGTH(new_cases_smoothed), '; ', '(', LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)), ')')) AS max_len_iso_code FROM master_dataset
-WHERE LENGTH(new_cases_smoothed) = (SELECT MAX(LENGTH(new_cases_smoothed)) FROM master_dataset);
-
-
--- The following queries will  provide a respective COUNT of the two preceding queries:
-
--- Number of Max Length Fields in Categorical Feature:
-SELECT COUNT(DISTINCT(CONCAT(iso_code, '; ', LENGTH(iso_code)))) AS count_max_len_iso_code FROM master_dataset
-WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM master_dataset);
-
--- Number of Max Length Fields in Numerical Feature:
-SELECT COUNT(DISTINCT(CONCAT(new_cases_smoothed, '; ', LENGTH(new_cases_smoothed), '; ', '(', LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)), ')'))) AS count_max_len_iso_code FROM master_dataset
-WHERE LENGTH(new_cases_smoothed) = (SELECT MAX(LENGTH(new_cases_smoothed)) FROM master_dataset);
-
-
-
-/* Toggle to (un)hide the sample query capable of gathering each SELECT query's results into a single table.
-   This temporary table will not be used because at least one of the columns, apparently the column placed 1st in order, creates duplicates of the same field in that column.
+/* Toggle to (un)hide this sample query which is capable of gathering each SELECT query's results into a single table.
+   This temporary table will not be used because at least one of the columns, apparently the column placed 1st in order, creates duplicates of the same fields in that very column.
    For the purpose of identifying the field with MAX length in each column, this query would still be functional.
    However, for the maintainence of data integrity it is best to take another approach.
 
 SELECT column_1.max_len_new_cases, column_2.max_len_total_deaths FROM
 
-	(SELECT DISTINCT(CONCAT(new_cases, '; ', LENGTH(new_cases))) AS max_len_new_cases FROM master_dataset
-	WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM master_dataset)) AS column_1,
+	(SELECT DISTINCT(CONCAT(new_cases, '; ', LENGTH(new_cases))) AS max_len_new_cases FROM data_load
+	WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM data_load)) AS column_1,
     
-    (SELECT DISTINCT(CONCAT(total_deaths, '; ', LENGTH(total_deaths))) AS max_len_total_deaths FROM master_dataset
-	WHERE LENGTH(total_deaths) = (SELECT MAX(LENGTH(total_deaths)) FROM master_dataset)) AS column_2;
+    (SELECT DISTINCT(CONCAT(total_deaths, '; ', LENGTH(total_deaths))) AS max_len_total_deaths FROM data_load
+	WHERE LENGTH(total_deaths) = (SELECT MAX(LENGTH(total_deaths)) FROM data_load)) AS column_2;
 
 
 The queries below will confirm the erred output of the temporary table above, i.e., the outputs from the following queries are correct but the output above is incorrect.
 
 -- Number of Max Length Fields in new_cases:
-SELECT COUNT(DISTINCT(CONCAT(new_cases, '; ', LENGTH(new_cases)))) AS count_max_len_new_cases FROM master_dataset
-WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM master_dataset);
+SELECT COUNT(DISTINCT(CONCAT(new_cases, '; ', LENGTH(new_cases)))) AS count_max_len_new_cases FROM data_load
+WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM data_load);
 
 -- Max Length Fields in new_cases:
-SELECT DISTINCT(CONCAT(new_cases, '; ', LENGTH(new_cases))) AS count_max_len_new_cases FROM master_dataset
-WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM master_dataset);
+SELECT DISTINCT(CONCAT(new_cases, '; ', LENGTH(new_cases))) AS count_max_len_new_cases FROM data_load
+WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM data_load);
 
 
 -- Number of Max Length Fields in total_deaths:
-SELECT COUNT(DISTINCT(CONCAT(total_deaths, '; ', LENGTH(total_deaths)))) AS count_max_len_total_deaths FROM master_dataset
-WHERE LENGTH(total_deaths) = (SELECT MAX(LENGTH(total_deaths)) FROM master_dataset);
+SELECT COUNT(DISTINCT(CONCAT(total_deaths, '; ', LENGTH(total_deaths)))) AS count_max_len_total_deaths FROM data_load
+WHERE LENGTH(total_deaths) = (SELECT MAX(LENGTH(total_deaths)) FROM data_load);
 
 -- Max Length Fields in total_deaths:
-SELECT DISTINCT(CONCAT(total_deaths, '; ', LENGTH(total_deaths))) AS count_max_len_total_deaths FROM master_dataset
-WHERE LENGTH(total_deaths) = (SELECT MAX(LENGTH(total_deaths)) FROM master_dataset);
+SELECT DISTINCT(CONCAT(total_deaths, '; ', LENGTH(total_deaths))) AS count_max_len_total_deaths FROM data_load
+WHERE LENGTH(total_deaths) = (SELECT MAX(LENGTH(total_deaths)) FROM data_load);
 
 */
+
+
+
 
 
 
 /* MAX Character Length of All Features Except Temporal Feature(s):
 
--- SQL queries for MAX character length of numerical and categorical features were automated via python script and has been pasted below.
+-- SQL queries for MAX character length of categorical and numerical features were automated via python script and has been pasted below.
 -- The _date_ feature is a categorical feature, however, in the context of SQL databases, it is a temporal feature, and the only temporal feature in this dataset. 
--- The following 2 query-sets will return multiple tabs rather than a single temporary table grouping all columns together:
+-- The following 3 query-sets will return multiple tabs rather than a single temporary table grouping all of the columns together:
 
 */
 
--- Categorical Features - MAX Length:
+-- 1. Categorical Features - MAX Length:
+SELECT DISTINCT(iso_code) AS max_len_iso_code,
+       LENGTH(iso_code) AS len
+FROM data_load
+WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM data_load);
+
+
+SELECT DISTINCT(continent) AS max_len_continent,
+       LENGTH(continent) AS len
+FROM data_load
+WHERE LENGTH(continent) = (SELECT MAX(LENGTH(continent)) FROM data_load);
+
+
+SELECT DISTINCT(location) AS max_len_location,
+       LENGTH(location) AS len
+FROM data_load
+WHERE LENGTH(location) = (SELECT MAX(LENGTH(location)) FROM data_load);
+
+
+SELECT DISTINCT(tests_units) AS max_len_tests_units,
+       LENGTH(tests_units) AS len
+FROM data_load
+WHERE LENGTH(tests_units) = (SELECT MAX(LENGTH(tests_units)) FROM data_load);
+
+
+
+-- 2. Numerical Discrete Features - MAX Length:
+SELECT DISTINCT(population) AS max_len_num_population,
+				CASE
+					WHEN population LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(population, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN population LIKE '-%' THEN 
+					(CASE
+						WHEN population LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(population, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN population LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(population, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN population LIKE '-%' THEN 
+					(CASE
+						WHEN population LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(population, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+					(CASE 
+						WHEN population LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(population, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(population, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE population NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(total_cases) AS max_len_num_total_cases,
+	        CASE
+				WHEN total_cases LIKE "%.%" THEN
+				(CASE WHEN CAST(SUBSTRING_INDEX(total_cases, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+				ELSE "True" END AS whole_number,
+                    
+			CASE
+				WHEN total_cases LIKE '-%' THEN 
+				(CASE
+					WHEN total_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT)) - 1) END) 
+					ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT)) - 1) END)
+					
+				ELSE 
+				(CASE
+					WHEN total_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT)) END)
+					ELSE LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT)) END)
+			END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE
+		       WHEN total_cases LIKE '-%' THEN 
+				   (CASE
+					   WHEN total_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT)) - 1) END) 
+					   ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+				   (CASE 
+					   WHEN total_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT)) END)
+				       ELSE LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT)) END)
+	  
+                   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(total_cases, '.', 1) AS SIGNED INT))) 
+						  FROM data_load 
+						  WHERE total_cases NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(new_cases) AS max_len_num_new_cases,
+				CASE
+					WHEN new_cases LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN new_cases LIKE '-%' THEN 
+					(CASE
+						WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+			   WHEN new_cases LIKE '-%' THEN 
+				   (CASE
+					    WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+			       (CASE 
+						WHEN new_cases LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_cases, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(new_cases, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE new_cases NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(total_tests) AS max_len_num_total_tests,
+				CASE
+					WHEN total_tests LIKE "%.%" THEN
+                    (CASE WHEN CAST(SUBSTRING_INDEX(total_tests, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+                    ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN total_tests LIKE '-%' THEN 
+                    (CASE
+						WHEN total_tests LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_tests, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN total_tests LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_tests, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN total_tests LIKE '-%' THEN 
+					(CASE
+						WHEN total_tests LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_tests, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+					(CASE 
+						WHEN total_tests LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_tests, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(total_tests, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE total_tests NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(new_tests) AS max_len_num_new_tests,
+				CASE
+					WHEN new_tests LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(new_tests, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN new_tests LIKE '-%' THEN 
+					(CASE
+						WHEN new_tests LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_tests, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN new_tests LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_tests, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN new_tests LIKE '-%' THEN 
+				   (CASE
+						WHEN new_tests LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_tests, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+					(CASE 
+						WHEN new_tests LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_tests, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(new_tests, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE new_tests NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(total_deaths) AS max_len_num_total_deaths,
+				CASE
+					WHEN total_deaths LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(total_deaths, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN total_deaths LIKE '-%' THEN 
+					(CASE
+						WHEN total_deaths LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_deaths, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN total_deaths LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_deaths, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN total_deaths LIKE '-%' THEN 
+				   (CASE
+					    WHEN total_deaths LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_deaths, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+			       (CASE 
+						WHEN total_deaths LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_deaths, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(total_deaths, '.', 1) AS SIGNED INT))) 
+				      FROM data_load 
+					  WHERE total_deaths NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(new_deaths) AS max_len_num_new_deaths,
+				CASE
+					WHEN new_deaths LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(new_deaths, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN new_deaths LIKE '-%' THEN 
+					(CASE
+						WHEN new_deaths LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_deaths, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN new_deaths LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_deaths, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN new_deaths LIKE '-%' THEN 
+			       (CASE
+						WHEN new_deaths LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_deaths, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+			       (CASE 
+						WHEN new_deaths LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(new_deaths, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(new_deaths, '.', 1) AS SIGNED INT))) 
+				      FROM data_load 
+					  WHERE new_deaths NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+           
+
+SELECT DISTINCT(icu_patients) AS max_len_num_icu_patients,
+				CASE
+					WHEN icu_patients LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(icu_patients, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN icu_patients LIKE '-%' THEN 
+					(CASE
+						WHEN icu_patients LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(icu_patients, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN icu_patients LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(icu_patients, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+		       WHEN icu_patients LIKE '-%' THEN 
+				   (CASE
+						WHEN icu_patients LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(icu_patients, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+				   (CASE 
+						WHEN icu_patients LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(icu_patients, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(icu_patients, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE icu_patients NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(hosp_patients) AS max_len_num_hosp_patients,
+				CASE
+					WHEN hosp_patients LIKE "%.%" THEN
+                    (CASE WHEN CAST(SUBSTRING_INDEX(hosp_patients, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+                    ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN hosp_patients LIKE '-%' THEN 
+					(CASE
+						WHEN hosp_patients LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(hosp_patients, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN hosp_patients LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(hosp_patients, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN hosp_patients LIKE '-%' THEN 
+			       (CASE
+						WHEN hosp_patients LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(hosp_patients, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+				   (CASE 
+						WHEN hosp_patients LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(hosp_patients, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(hosp_patients, '.', 1) AS SIGNED INT))) 
+				      FROM data_load 
+					  WHERE hosp_patients NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(weekly_icu_admissions) AS max_len_num_weekly_icu_admissions,
+				CASE
+					WHEN weekly_icu_admissions LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN weekly_icu_admissions LIKE '-%' THEN 
+					(CASE
+						WHEN weekly_icu_admissions LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN weekly_icu_admissions LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN weekly_icu_admissions LIKE '-%' THEN 
+			       (CASE
+						WHEN weekly_icu_admissions LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+			       (CASE 
+						WHEN weekly_icu_admissions LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE weekly_icu_admissions NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(weekly_hosp_admissions) AS max_len_num_weekly_hosp_admissions,
+				CASE
+					WHEN weekly_hosp_admissions LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN weekly_hosp_admissions LIKE '-%' THEN 
+					(CASE
+						WHEN weekly_hosp_admissions LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN weekly_hosp_admissions LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN weekly_hosp_admissions LIKE '-%' THEN 
+			       (CASE
+						WHEN weekly_hosp_admissions LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+                       (CASE 
+                           WHEN weekly_hosp_admissions LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT)) END)
+                           ELSE LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE weekly_hosp_admissions NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(total_vaccinations) AS max_len_num_total_vaccinations,
+				CASE
+					WHEN total_vaccinations LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(total_vaccinations, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN total_vaccinations LIKE '-%' THEN 
+					(CASE
+						WHEN total_vaccinations LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_vaccinations, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN total_vaccinations LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_vaccinations, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+		       WHEN total_vaccinations LIKE '-%' THEN 
+			       (CASE
+						WHEN total_vaccinations LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_vaccinations, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+			       (CASE 
+						WHEN total_vaccinations LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_vaccinations, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(total_vaccinations, '.', 1) AS SIGNED INT))) 
+		              FROM data_load 
+					  WHERE total_vaccinations NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(people_vaccinated) AS max_len_num_people_vaccinated,
+				CASE
+					WHEN people_vaccinated LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(people_vaccinated, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN people_vaccinated LIKE '-%' THEN 
+					(CASE
+						WHEN people_vaccinated LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(people_vaccinated, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN people_vaccinated LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(people_vaccinated, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN people_vaccinated LIKE '-%' THEN 
+			       (CASE
+						WHEN people_vaccinated LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(people_vaccinated, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+				   (CASE 
+						WHEN people_vaccinated LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(people_vaccinated, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(people_vaccinated, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE people_vaccinated NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(people_fully_vaccinated) AS max_len_num_people_fully_vaccinated,
+				CASE
+					WHEN people_fully_vaccinated LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN people_fully_vaccinated LIKE '-%' THEN 
+					(CASE
+						WHEN people_fully_vaccinated LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN people_fully_vaccinated LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN people_fully_vaccinated LIKE '-%' THEN 
+			       (CASE
+						WHEN people_fully_vaccinated LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+                       (CASE 
+                           WHEN people_fully_vaccinated LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT)) END)
+                           ELSE LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1) AS SIGNED INT))) 
+				      FROM data_load 
+					  WHERE people_fully_vaccinated NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+SELECT DISTINCT(total_boosters) AS max_len_num_total_boosters,
+				CASE
+					WHEN total_boosters LIKE "%.%" THEN
+					(CASE WHEN CAST(SUBSTRING_INDEX(total_boosters, '.', -1) AS SIGNED INT) > 0 THEN "False" ELSE "True" END) 
+					ELSE "True" END AS whole_number,
+                    
+				CASE
+					WHEN total_boosters LIKE '-%' THEN 
+					(CASE
+						WHEN total_boosters LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_boosters, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT)) - 1) END)
+					
+                    ELSE 
+                    (CASE
+                        WHEN total_boosters LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_boosters, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT)) END)
+                        ELSE LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT)) END)
+                END AS MAX_length_whole_number
+                
+           FROM data_load
+
+           WHERE CASE	
+	           WHEN total_boosters LIKE '-%' THEN 
+			       (CASE
+						WHEN total_boosters LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_boosters, '.', -1) AS SIGNED INT) > 0) = 0 THEN (LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT)) - 1) END) 
+						ELSE (LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT)) - 1) END)
+					
+	           ELSE
+			       (CASE 
+						WHEN total_boosters LIKE '%.%' THEN (CASE WHEN (CAST(SUBSTRING_INDEX(total_boosters, '.', -1) AS SIGNED INT) > 0) = 0 THEN LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT)) END)
+						ELSE LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT)) END)
+	  
+			   END = (SELECT MAX(LENGTH(CAST(SUBSTRING_INDEX(total_boosters, '.', 1) AS SIGNED INT))) 
+					  FROM data_load 
+					  WHERE total_boosters NOT LIKE '-%')
+
+           ORDER BY whole_number ASC;
+
+
+
+-- 3. Numerical Continuous Features - MAX Length:
+
+-- A) Precision - MAX Length:
+SELECT DISTINCT(new_cases_smoothed) AS max_len_num_new_cases_smoothed, 
+       LENGTH(new_cases_smoothed) AS total_char_len,
+       CASE 
+           WHEN new_cases_smoothed LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+           WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+           WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+		   ELSE LENGTH(new_cases_smoothed) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+	   WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+	   WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+	   ELSE LENGTH(new_cases_smoothed) 
+	  
+      END = (SELECT MAX(CASE WHEN new_cases_smoothed LIKE "-%.%" THEN (LENGTH(new_cases_smoothed) - 2) 
+							 WHEN new_cases_smoothed LIKE "-%" THEN (LENGTH(new_cases_smoothed) - 1)
+							 WHEN new_cases_smoothed LIKE "%.%" THEN (LENGTH(new_cases_smoothed) - 1) 
+							 ELSE LENGTH(new_cases_smoothed) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_deaths_smoothed) AS max_len_num_new_deaths_smoothed, 
+       LENGTH(new_deaths_smoothed) AS total_char_len,
+       CASE 
+           WHEN new_deaths_smoothed LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_deaths_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_deaths_smoothed LIKE "-%.%" THEN (LENGTH(new_deaths_smoothed) - 2) 
+           WHEN new_deaths_smoothed LIKE "-%" THEN (LENGTH(new_deaths_smoothed) - 1)
+           WHEN new_deaths_smoothed LIKE "%.%" THEN (LENGTH(new_deaths_smoothed) - 1) 
+		   ELSE LENGTH(new_deaths_smoothed) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_deaths_smoothed LIKE "-%.%" THEN (LENGTH(new_deaths_smoothed) - 2) 
+		   WHEN new_deaths_smoothed LIKE "-%" THEN (LENGTH(new_deaths_smoothed) - 1)
+		   WHEN new_deaths_smoothed LIKE "%.%" THEN (LENGTH(new_deaths_smoothed) - 1) 
+		   ELSE LENGTH(new_deaths_smoothed) 
+	  
+      END = (SELECT MAX(CASE WHEN new_deaths_smoothed LIKE "-%.%" THEN (LENGTH(new_deaths_smoothed) - 2) 
+							 WHEN new_deaths_smoothed LIKE "-%" THEN (LENGTH(new_deaths_smoothed) - 1)
+							 WHEN new_deaths_smoothed LIKE "%.%" THEN (LENGTH(new_deaths_smoothed) - 1) 
+							 ELSE LENGTH(new_deaths_smoothed) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_cases_per_million) AS max_len_num_total_cases_per_million, 
+       LENGTH(total_cases_per_million) AS total_char_len,
+       CASE 
+           WHEN total_cases_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_cases_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN total_cases_per_million LIKE "-%.%" THEN (LENGTH(total_cases_per_million) - 2) 
+           WHEN total_cases_per_million LIKE "-%" THEN (LENGTH(total_cases_per_million) - 1)
+           WHEN total_cases_per_million LIKE "%.%" THEN (LENGTH(total_cases_per_million) - 1) 
+		   ELSE LENGTH(total_cases_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN total_cases_per_million LIKE "-%.%" THEN (LENGTH(total_cases_per_million) - 2) 
+		   WHEN total_cases_per_million LIKE "-%" THEN (LENGTH(total_cases_per_million) - 1)
+		   WHEN total_cases_per_million LIKE "%.%" THEN (LENGTH(total_cases_per_million) - 1) 
+		   ELSE LENGTH(total_cases_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN total_cases_per_million LIKE "-%.%" THEN (LENGTH(total_cases_per_million) - 2) 
+							 WHEN total_cases_per_million LIKE "-%" THEN (LENGTH(total_cases_per_million) - 1)
+							 WHEN total_cases_per_million LIKE "%.%" THEN (LENGTH(total_cases_per_million) - 1) 
+							 ELSE LENGTH(total_cases_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_cases_per_million) AS max_len_num_new_cases_per_million, 
+       LENGTH(new_cases_per_million) AS total_char_len,
+       CASE 
+           WHEN new_cases_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_cases_per_million LIKE "-%.%" THEN (LENGTH(new_cases_per_million) - 2) 
+           WHEN new_cases_per_million LIKE "-%" THEN (LENGTH(new_cases_per_million) - 1)
+           WHEN new_cases_per_million LIKE "%.%" THEN (LENGTH(new_cases_per_million) - 1) 
+		   ELSE LENGTH(new_cases_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_cases_per_million LIKE "-%.%" THEN (LENGTH(new_cases_per_million) - 2) 
+		   WHEN new_cases_per_million LIKE "-%" THEN (LENGTH(new_cases_per_million) - 1)
+		   WHEN new_cases_per_million LIKE "%.%" THEN (LENGTH(new_cases_per_million) - 1) 
+		   ELSE LENGTH(new_cases_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN new_cases_per_million LIKE "-%.%" THEN (LENGTH(new_cases_per_million) - 2) 
+						     WHEN new_cases_per_million LIKE "-%" THEN (LENGTH(new_cases_per_million) - 1)
+							 WHEN new_cases_per_million LIKE "%.%" THEN (LENGTH(new_cases_per_million) - 1) 
+							 ELSE LENGTH(new_cases_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_cases_smoothed_per_million) AS max_len_num_new_cases_smoothed_per_million, 
+       LENGTH(new_cases_smoothed_per_million) AS total_char_len,
+       CASE 
+           WHEN new_cases_smoothed_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_smoothed_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_cases_smoothed_per_million LIKE "-%.%" THEN (LENGTH(new_cases_smoothed_per_million) - 2) 
+           WHEN new_cases_smoothed_per_million LIKE "-%" THEN (LENGTH(new_cases_smoothed_per_million) - 1)
+           WHEN new_cases_smoothed_per_million LIKE "%.%" THEN (LENGTH(new_cases_smoothed_per_million) - 1) 
+		   ELSE LENGTH(new_cases_smoothed_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_cases_smoothed_per_million LIKE "-%.%" THEN (LENGTH(new_cases_smoothed_per_million) - 2) 
+		   WHEN new_cases_smoothed_per_million LIKE "-%" THEN (LENGTH(new_cases_smoothed_per_million) - 1)
+		   WHEN new_cases_smoothed_per_million LIKE "%.%" THEN (LENGTH(new_cases_smoothed_per_million) - 1) 
+		   ELSE LENGTH(new_cases_smoothed_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN new_cases_smoothed_per_million LIKE "-%.%" THEN (LENGTH(new_cases_smoothed_per_million) - 2) 
+							 WHEN new_cases_smoothed_per_million LIKE "-%" THEN (LENGTH(new_cases_smoothed_per_million) - 1)
+							 WHEN new_cases_smoothed_per_million LIKE "%.%" THEN (LENGTH(new_cases_smoothed_per_million) - 1) 
+							 ELSE LENGTH(new_cases_smoothed_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_deaths_per_million) AS max_len_num_total_deaths_per_million, 
+       LENGTH(total_deaths_per_million) AS total_char_len,
+       CASE 
+           WHEN total_deaths_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_deaths_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN total_deaths_per_million LIKE "-%.%" THEN (LENGTH(total_deaths_per_million) - 2) 
+           WHEN total_deaths_per_million LIKE "-%" THEN (LENGTH(total_deaths_per_million) - 1)
+           WHEN total_deaths_per_million LIKE "%.%" THEN (LENGTH(total_deaths_per_million) - 1) 
+		   ELSE LENGTH(total_deaths_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN total_deaths_per_million LIKE "-%.%" THEN (LENGTH(total_deaths_per_million) - 2) 
+		   WHEN total_deaths_per_million LIKE "-%" THEN (LENGTH(total_deaths_per_million) - 1)
+		   WHEN total_deaths_per_million LIKE "%.%" THEN (LENGTH(total_deaths_per_million) - 1) 
+		   ELSE LENGTH(total_deaths_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN total_deaths_per_million LIKE "-%.%" THEN (LENGTH(total_deaths_per_million) - 2) 
+							 WHEN total_deaths_per_million LIKE "-%" THEN (LENGTH(total_deaths_per_million) - 1)
+							 WHEN total_deaths_per_million LIKE "%.%" THEN (LENGTH(total_deaths_per_million) - 1) 
+							 ELSE LENGTH(total_deaths_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_deaths_per_million) AS max_len_num_new_deaths_per_million, 
+       LENGTH(new_deaths_per_million) AS total_char_len,
+       CASE 
+           WHEN new_deaths_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_deaths_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_deaths_per_million LIKE "-%.%" THEN (LENGTH(new_deaths_per_million) - 2) 
+           WHEN new_deaths_per_million LIKE "-%" THEN (LENGTH(new_deaths_per_million) - 1)
+           WHEN new_deaths_per_million LIKE "%.%" THEN (LENGTH(new_deaths_per_million) - 1) 
+		   ELSE LENGTH(new_deaths_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_deaths_per_million LIKE "-%.%" THEN (LENGTH(new_deaths_per_million) - 2) 
+		   WHEN new_deaths_per_million LIKE "-%" THEN (LENGTH(new_deaths_per_million) - 1)
+		   WHEN new_deaths_per_million LIKE "%.%" THEN (LENGTH(new_deaths_per_million) - 1) 
+		   ELSE LENGTH(new_deaths_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN new_deaths_per_million LIKE "-%.%" THEN (LENGTH(new_deaths_per_million) - 2) 
+							 WHEN new_deaths_per_million LIKE "-%" THEN (LENGTH(new_deaths_per_million) - 1)
+							 WHEN new_deaths_per_million LIKE "%.%" THEN (LENGTH(new_deaths_per_million) - 1) 
+							 ELSE LENGTH(new_deaths_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_deaths_smoothed_per_million) AS max_len_num_new_deaths_smoothed_per_million, 
+       LENGTH(new_deaths_smoothed_per_million) AS total_char_len,
+       CASE 
+           WHEN new_deaths_smoothed_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_deaths_smoothed_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_deaths_smoothed_per_million LIKE "-%.%" THEN (LENGTH(new_deaths_smoothed_per_million) - 2) 
+           WHEN new_deaths_smoothed_per_million LIKE "-%" THEN (LENGTH(new_deaths_smoothed_per_million) - 1)
+           WHEN new_deaths_smoothed_per_million LIKE "%.%" THEN (LENGTH(new_deaths_smoothed_per_million) - 1) 
+		   ELSE LENGTH(new_deaths_smoothed_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_deaths_smoothed_per_million LIKE "-%.%" THEN (LENGTH(new_deaths_smoothed_per_million) - 2) 
+	   WHEN new_deaths_smoothed_per_million LIKE "-%" THEN (LENGTH(new_deaths_smoothed_per_million) - 1)
+	   WHEN new_deaths_smoothed_per_million LIKE "%.%" THEN (LENGTH(new_deaths_smoothed_per_million) - 1) 
+	   ELSE LENGTH(new_deaths_smoothed_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN new_deaths_smoothed_per_million LIKE "-%.%" THEN (LENGTH(new_deaths_smoothed_per_million) - 2) 
+						     WHEN new_deaths_smoothed_per_million LIKE "-%" THEN (LENGTH(new_deaths_smoothed_per_million) - 1)
+							 WHEN new_deaths_smoothed_per_million LIKE "%.%" THEN (LENGTH(new_deaths_smoothed_per_million) - 1) 
+							 ELSE LENGTH(new_deaths_smoothed_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(reproduction_rate) AS max_len_num_reproduction_rate, 
+       LENGTH(reproduction_rate) AS total_char_len,
+       CASE 
+           WHEN reproduction_rate LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(reproduction_rate, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN reproduction_rate LIKE "-%.%" THEN (LENGTH(reproduction_rate) - 2) 
+           WHEN reproduction_rate LIKE "-%" THEN (LENGTH(reproduction_rate) - 1)
+           WHEN reproduction_rate LIKE "%.%" THEN (LENGTH(reproduction_rate) - 1) 
+		   ELSE LENGTH(reproduction_rate) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN reproduction_rate LIKE "-%.%" THEN (LENGTH(reproduction_rate) - 2) 
+		   WHEN reproduction_rate LIKE "-%" THEN (LENGTH(reproduction_rate) - 1)
+		   WHEN reproduction_rate LIKE "%.%" THEN (LENGTH(reproduction_rate) - 1) 
+		   ELSE LENGTH(reproduction_rate) 
+	  
+      END = (SELECT MAX(CASE WHEN reproduction_rate LIKE "-%.%" THEN (LENGTH(reproduction_rate) - 2) 
+							 WHEN reproduction_rate LIKE "-%" THEN (LENGTH(reproduction_rate) - 1)
+							 WHEN reproduction_rate LIKE "%.%" THEN (LENGTH(reproduction_rate) - 1) 
+							 ELSE LENGTH(reproduction_rate) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(icu_patients_per_million) AS max_len_num_icu_patients_per_million, 
+       LENGTH(icu_patients_per_million) AS total_char_len,
+       CASE 
+           WHEN icu_patients_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(icu_patients_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN icu_patients_per_million LIKE "-%.%" THEN (LENGTH(icu_patients_per_million) - 2) 
+           WHEN icu_patients_per_million LIKE "-%" THEN (LENGTH(icu_patients_per_million) - 1)
+           WHEN icu_patients_per_million LIKE "%.%" THEN (LENGTH(icu_patients_per_million) - 1) 
+		   ELSE LENGTH(icu_patients_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN icu_patients_per_million LIKE "-%.%" THEN (LENGTH(icu_patients_per_million) - 2) 
+		   WHEN icu_patients_per_million LIKE "-%" THEN (LENGTH(icu_patients_per_million) - 1)
+		   WHEN icu_patients_per_million LIKE "%.%" THEN (LENGTH(icu_patients_per_million) - 1) 
+		   ELSE LENGTH(icu_patients_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN icu_patients_per_million LIKE "-%.%" THEN (LENGTH(icu_patients_per_million) - 2) 
+							 WHEN icu_patients_per_million LIKE "-%" THEN (LENGTH(icu_patients_per_million) - 1)
+							 WHEN icu_patients_per_million LIKE "%.%" THEN (LENGTH(icu_patients_per_million) - 1) 
+							 ELSE LENGTH(icu_patients_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(hosp_patients_per_million) AS max_len_num_hosp_patients_per_million, 
+       LENGTH(hosp_patients_per_million) AS total_char_len,
+       CASE 
+           WHEN hosp_patients_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(hosp_patients_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN hosp_patients_per_million LIKE "-%.%" THEN (LENGTH(hosp_patients_per_million) - 2) 
+           WHEN hosp_patients_per_million LIKE "-%" THEN (LENGTH(hosp_patients_per_million) - 1)
+           WHEN hosp_patients_per_million LIKE "%.%" THEN (LENGTH(hosp_patients_per_million) - 1) 
+		   ELSE LENGTH(hosp_patients_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN hosp_patients_per_million LIKE "-%.%" THEN (LENGTH(hosp_patients_per_million) - 2) 
+		   WHEN hosp_patients_per_million LIKE "-%" THEN (LENGTH(hosp_patients_per_million) - 1)
+		   WHEN hosp_patients_per_million LIKE "%.%" THEN (LENGTH(hosp_patients_per_million) - 1) 
+		   ELSE LENGTH(hosp_patients_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN hosp_patients_per_million LIKE "-%.%" THEN (LENGTH(hosp_patients_per_million) - 2) 
+							 WHEN hosp_patients_per_million LIKE "-%" THEN (LENGTH(hosp_patients_per_million) - 1)
+							 WHEN hosp_patients_per_million LIKE "%.%" THEN (LENGTH(hosp_patients_per_million) - 1) 
+							 ELSE LENGTH(hosp_patients_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(weekly_icu_admissions_per_million) AS max_len_num_weekly_icu_admissions_per_million, 
+       LENGTH(weekly_icu_admissions_per_million) AS total_char_len,
+       CASE 
+           WHEN weekly_icu_admissions_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(weekly_icu_admissions_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN weekly_icu_admissions_per_million LIKE "-%.%" THEN (LENGTH(weekly_icu_admissions_per_million) - 2) 
+           WHEN weekly_icu_admissions_per_million LIKE "-%" THEN (LENGTH(weekly_icu_admissions_per_million) - 1)
+           WHEN weekly_icu_admissions_per_million LIKE "%.%" THEN (LENGTH(weekly_icu_admissions_per_million) - 1) 
+		   ELSE LENGTH(weekly_icu_admissions_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN weekly_icu_admissions_per_million LIKE "-%.%" THEN (LENGTH(weekly_icu_admissions_per_million) - 2) 
+		   WHEN weekly_icu_admissions_per_million LIKE "-%" THEN (LENGTH(weekly_icu_admissions_per_million) - 1)
+		   WHEN weekly_icu_admissions_per_million LIKE "%.%" THEN (LENGTH(weekly_icu_admissions_per_million) - 1) 
+		   ELSE LENGTH(weekly_icu_admissions_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN weekly_icu_admissions_per_million LIKE "-%.%" THEN (LENGTH(weekly_icu_admissions_per_million) - 2) 
+							 WHEN weekly_icu_admissions_per_million LIKE "-%" THEN (LENGTH(weekly_icu_admissions_per_million) - 1)
+							 WHEN weekly_icu_admissions_per_million LIKE "%.%" THEN (LENGTH(weekly_icu_admissions_per_million) - 1) 
+							 ELSE LENGTH(weekly_icu_admissions_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(weekly_hosp_admissions_per_million) AS max_len_num_weekly_hosp_admissions_per_million, 
+       LENGTH(weekly_hosp_admissions_per_million) AS total_char_len,
+       CASE 
+           WHEN weekly_hosp_admissions_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(weekly_hosp_admissions_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN weekly_hosp_admissions_per_million LIKE "-%.%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 2) 
+           WHEN weekly_hosp_admissions_per_million LIKE "-%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 1)
+           WHEN weekly_hosp_admissions_per_million LIKE "%.%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 1) 
+		   ELSE LENGTH(weekly_hosp_admissions_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN weekly_hosp_admissions_per_million LIKE "-%.%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 2) 
+		   WHEN weekly_hosp_admissions_per_million LIKE "-%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 1)
+		   WHEN weekly_hosp_admissions_per_million LIKE "%.%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 1) 
+		   ELSE LENGTH(weekly_hosp_admissions_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN weekly_hosp_admissions_per_million LIKE "-%.%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 2) 
+							 WHEN weekly_hosp_admissions_per_million LIKE "-%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 1)
+							 WHEN weekly_hosp_admissions_per_million LIKE "%.%" THEN (LENGTH(weekly_hosp_admissions_per_million) - 1) 
+							 ELSE LENGTH(weekly_hosp_admissions_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_tests_per_thousand) AS max_len_num_total_tests_per_thousand, 
+       LENGTH(total_tests_per_thousand) AS total_char_len,
+       CASE 
+           WHEN total_tests_per_thousand LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_tests_per_thousand, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN total_tests_per_thousand LIKE "-%.%" THEN (LENGTH(total_tests_per_thousand) - 2) 
+           WHEN total_tests_per_thousand LIKE "-%" THEN (LENGTH(total_tests_per_thousand) - 1)
+           WHEN total_tests_per_thousand LIKE "%.%" THEN (LENGTH(total_tests_per_thousand) - 1) 
+		   ELSE LENGTH(total_tests_per_thousand) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN total_tests_per_thousand LIKE "-%.%" THEN (LENGTH(total_tests_per_thousand) - 2) 
+		   WHEN total_tests_per_thousand LIKE "-%" THEN (LENGTH(total_tests_per_thousand) - 1)
+		   WHEN total_tests_per_thousand LIKE "%.%" THEN (LENGTH(total_tests_per_thousand) - 1) 
+		   ELSE LENGTH(total_tests_per_thousand) 
+	  
+      END = (SELECT MAX(CASE WHEN total_tests_per_thousand LIKE "-%.%" THEN (LENGTH(total_tests_per_thousand) - 2) 
+							 WHEN total_tests_per_thousand LIKE "-%" THEN (LENGTH(total_tests_per_thousand) - 1)
+							 WHEN total_tests_per_thousand LIKE "%.%" THEN (LENGTH(total_tests_per_thousand) - 1) 
+							 ELSE LENGTH(total_tests_per_thousand) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_tests_per_thousand) AS max_len_num_new_tests_per_thousand, 
+       LENGTH(new_tests_per_thousand) AS total_char_len,
+       CASE 
+           WHEN new_tests_per_thousand LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_tests_per_thousand, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_tests_per_thousand LIKE "-%.%" THEN (LENGTH(new_tests_per_thousand) - 2) 
+           WHEN new_tests_per_thousand LIKE "-%" THEN (LENGTH(new_tests_per_thousand) - 1)
+           WHEN new_tests_per_thousand LIKE "%.%" THEN (LENGTH(new_tests_per_thousand) - 1) 
+		   ELSE LENGTH(new_tests_per_thousand) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_tests_per_thousand LIKE "-%.%" THEN (LENGTH(new_tests_per_thousand) - 2) 
+		   WHEN new_tests_per_thousand LIKE "-%" THEN (LENGTH(new_tests_per_thousand) - 1)
+		   WHEN new_tests_per_thousand LIKE "%.%" THEN (LENGTH(new_tests_per_thousand) - 1) 
+		   ELSE LENGTH(new_tests_per_thousand) 
+	  
+      END = (SELECT MAX(CASE WHEN new_tests_per_thousand LIKE "-%.%" THEN (LENGTH(new_tests_per_thousand) - 2) 
+							 WHEN new_tests_per_thousand LIKE "-%" THEN (LENGTH(new_tests_per_thousand) - 1)
+							 WHEN new_tests_per_thousand LIKE "%.%" THEN (LENGTH(new_tests_per_thousand) - 1) 
+							 ELSE LENGTH(new_tests_per_thousand) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_tests_smoothed) AS max_len_num_new_tests_smoothed, 
+       LENGTH(new_tests_smoothed) AS total_char_len,
+       CASE 
+           WHEN new_tests_smoothed LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_tests_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_tests_smoothed LIKE "-%.%" THEN (LENGTH(new_tests_smoothed) - 2) 
+           WHEN new_tests_smoothed LIKE "-%" THEN (LENGTH(new_tests_smoothed) - 1)
+           WHEN new_tests_smoothed LIKE "%.%" THEN (LENGTH(new_tests_smoothed) - 1) 
+		   ELSE LENGTH(new_tests_smoothed) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_tests_smoothed LIKE "-%.%" THEN (LENGTH(new_tests_smoothed) - 2) 
+		   WHEN new_tests_smoothed LIKE "-%" THEN (LENGTH(new_tests_smoothed) - 1)
+		   WHEN new_tests_smoothed LIKE "%.%" THEN (LENGTH(new_tests_smoothed) - 1) 
+		   ELSE LENGTH(new_tests_smoothed) 
+	  
+      END = (SELECT MAX(CASE WHEN new_tests_smoothed LIKE "-%.%" THEN (LENGTH(new_tests_smoothed) - 2) 
+							 WHEN new_tests_smoothed LIKE "-%" THEN (LENGTH(new_tests_smoothed) - 1)
+							 WHEN new_tests_smoothed LIKE "%.%" THEN (LENGTH(new_tests_smoothed) - 1) 
+							 ELSE LENGTH(new_tests_smoothed) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_tests_smoothed_per_thousand) AS max_len_num_new_tests_smoothed_per_thousand, 
+       LENGTH(new_tests_smoothed_per_thousand) AS total_char_len,
+       CASE 
+           WHEN new_tests_smoothed_per_thousand LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_tests_smoothed_per_thousand, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_tests_smoothed_per_thousand LIKE "-%.%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 2) 
+           WHEN new_tests_smoothed_per_thousand LIKE "-%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 1)
+           WHEN new_tests_smoothed_per_thousand LIKE "%.%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 1) 
+		   ELSE LENGTH(new_tests_smoothed_per_thousand) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_tests_smoothed_per_thousand LIKE "-%.%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 2) 
+		   WHEN new_tests_smoothed_per_thousand LIKE "-%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 1)
+		   WHEN new_tests_smoothed_per_thousand LIKE "%.%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 1) 
+		   ELSE LENGTH(new_tests_smoothed_per_thousand) 
+	  
+      END = (SELECT MAX(CASE WHEN new_tests_smoothed_per_thousand LIKE "-%.%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 2) 
+							 WHEN new_tests_smoothed_per_thousand LIKE "-%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 1)
+							 WHEN new_tests_smoothed_per_thousand LIKE "%.%" THEN (LENGTH(new_tests_smoothed_per_thousand) - 1) 
+							 ELSE LENGTH(new_tests_smoothed_per_thousand) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(positive_rate) AS max_len_num_positive_rate, 
+       LENGTH(positive_rate) AS total_char_len,
+       CASE 
+           WHEN positive_rate LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(positive_rate, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN positive_rate LIKE "-%.%" THEN (LENGTH(positive_rate) - 2) 
+           WHEN positive_rate LIKE "-%" THEN (LENGTH(positive_rate) - 1)
+           WHEN positive_rate LIKE "%.%" THEN (LENGTH(positive_rate) - 1) 
+		   ELSE LENGTH(positive_rate) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN positive_rate LIKE "-%.%" THEN (LENGTH(positive_rate) - 2) 
+		   WHEN positive_rate LIKE "-%" THEN (LENGTH(positive_rate) - 1)
+		   WHEN positive_rate LIKE "%.%" THEN (LENGTH(positive_rate) - 1) 
+		   ELSE LENGTH(positive_rate) 
+	  
+      END = (SELECT MAX(CASE WHEN positive_rate LIKE "-%.%" THEN (LENGTH(positive_rate) - 2) 
+							 WHEN positive_rate LIKE "-%" THEN (LENGTH(positive_rate) - 1)
+							 WHEN positive_rate LIKE "%.%" THEN (LENGTH(positive_rate) - 1) 
+							 ELSE LENGTH(positive_rate) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(tests_per_case) AS max_len_num_tests_per_case, 
+       LENGTH(tests_per_case) AS total_char_len,
+       CASE 
+           WHEN tests_per_case LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(tests_per_case, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN tests_per_case LIKE "-%.%" THEN (LENGTH(tests_per_case) - 2) 
+           WHEN tests_per_case LIKE "-%" THEN (LENGTH(tests_per_case) - 1)
+           WHEN tests_per_case LIKE "%.%" THEN (LENGTH(tests_per_case) - 1) 
+		   ELSE LENGTH(tests_per_case) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN tests_per_case LIKE "-%.%" THEN (LENGTH(tests_per_case) - 2) 
+		   WHEN tests_per_case LIKE "-%" THEN (LENGTH(tests_per_case) - 1)
+		   WHEN tests_per_case LIKE "%.%" THEN (LENGTH(tests_per_case) - 1) 
+		   ELSE LENGTH(tests_per_case) 
+	  
+      END = (SELECT MAX(CASE WHEN tests_per_case LIKE "-%.%" THEN (LENGTH(tests_per_case) - 2) 
+							 WHEN tests_per_case LIKE "-%" THEN (LENGTH(tests_per_case) - 1)
+							 WHEN tests_per_case LIKE "%.%" THEN (LENGTH(tests_per_case) - 1) 
+							 ELSE LENGTH(tests_per_case) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_vaccinations_per_hundred) AS max_len_num_total_vaccinations_per_hundred, 
+       LENGTH(total_vaccinations_per_hundred) AS total_char_len,
+       CASE 
+           WHEN total_vaccinations_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_vaccinations_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN total_vaccinations_per_hundred LIKE "-%.%" THEN (LENGTH(total_vaccinations_per_hundred) - 2) 
+           WHEN total_vaccinations_per_hundred LIKE "-%" THEN (LENGTH(total_vaccinations_per_hundred) - 1)
+           WHEN total_vaccinations_per_hundred LIKE "%.%" THEN (LENGTH(total_vaccinations_per_hundred) - 1) 
+		   ELSE LENGTH(total_vaccinations_per_hundred) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN total_vaccinations_per_hundred LIKE "-%.%" THEN (LENGTH(total_vaccinations_per_hundred) - 2) 
+		   WHEN total_vaccinations_per_hundred LIKE "-%" THEN (LENGTH(total_vaccinations_per_hundred) - 1)
+		   WHEN total_vaccinations_per_hundred LIKE "%.%" THEN (LENGTH(total_vaccinations_per_hundred) - 1) 
+		   ELSE LENGTH(total_vaccinations_per_hundred) 
+	  
+      END = (SELECT MAX(CASE WHEN total_vaccinations_per_hundred LIKE "-%.%" THEN (LENGTH(total_vaccinations_per_hundred) - 2) 
+							 WHEN total_vaccinations_per_hundred LIKE "-%" THEN (LENGTH(total_vaccinations_per_hundred) - 1)
+							 WHEN total_vaccinations_per_hundred LIKE "%.%" THEN (LENGTH(total_vaccinations_per_hundred) - 1) 
+							 ELSE LENGTH(total_vaccinations_per_hundred) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(people_vaccinated_per_hundred) AS max_len_num_people_vaccinated_per_hundred, 
+       LENGTH(people_vaccinated_per_hundred) AS total_char_len,
+       CASE 
+           WHEN people_vaccinated_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(people_vaccinated_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN people_vaccinated_per_hundred LIKE "-%.%" THEN (LENGTH(people_vaccinated_per_hundred) - 2) 
+           WHEN people_vaccinated_per_hundred LIKE "-%" THEN (LENGTH(people_vaccinated_per_hundred) - 1)
+           WHEN people_vaccinated_per_hundred LIKE "%.%" THEN (LENGTH(people_vaccinated_per_hundred) - 1) 
+		   ELSE LENGTH(people_vaccinated_per_hundred) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN people_vaccinated_per_hundred LIKE "-%.%" THEN (LENGTH(people_vaccinated_per_hundred) - 2) 
+		   WHEN people_vaccinated_per_hundred LIKE "-%" THEN (LENGTH(people_vaccinated_per_hundred) - 1)
+		   WHEN people_vaccinated_per_hundred LIKE "%.%" THEN (LENGTH(people_vaccinated_per_hundred) - 1) 
+		   ELSE LENGTH(people_vaccinated_per_hundred) 
+	  
+      END = (SELECT MAX(CASE WHEN people_vaccinated_per_hundred LIKE "-%.%" THEN (LENGTH(people_vaccinated_per_hundred) - 2) 
+							 WHEN people_vaccinated_per_hundred LIKE "-%" THEN (LENGTH(people_vaccinated_per_hundred) - 1)
+							 WHEN people_vaccinated_per_hundred LIKE "%.%" THEN (LENGTH(people_vaccinated_per_hundred) - 1) 
+							 ELSE LENGTH(people_vaccinated_per_hundred) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(people_fully_vaccinated_per_hundred) AS max_len_num_people_fully_vaccinated_per_hundred, 
+       LENGTH(people_fully_vaccinated_per_hundred) AS total_char_len,
+       CASE 
+           WHEN people_fully_vaccinated_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(people_fully_vaccinated_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN people_fully_vaccinated_per_hundred LIKE "-%.%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 2) 
+           WHEN people_fully_vaccinated_per_hundred LIKE "-%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 1)
+           WHEN people_fully_vaccinated_per_hundred LIKE "%.%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 1) 
+		   ELSE LENGTH(people_fully_vaccinated_per_hundred) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN people_fully_vaccinated_per_hundred LIKE "-%.%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 2) 
+		   WHEN people_fully_vaccinated_per_hundred LIKE "-%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 1)
+		   WHEN people_fully_vaccinated_per_hundred LIKE "%.%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 1) 
+		   ELSE LENGTH(people_fully_vaccinated_per_hundred) 
+	  
+      END = (SELECT MAX(CASE WHEN people_fully_vaccinated_per_hundred LIKE "-%.%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 2) 
+							 WHEN people_fully_vaccinated_per_hundred LIKE "-%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 1)
+							 WHEN people_fully_vaccinated_per_hundred LIKE "%.%" THEN (LENGTH(people_fully_vaccinated_per_hundred) - 1) 
+							 ELSE LENGTH(people_fully_vaccinated_per_hundred) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_boosters_per_hundred) AS max_len_num_total_boosters_per_hundred, 
+       LENGTH(total_boosters_per_hundred) AS total_char_len,
+       CASE 
+           WHEN total_boosters_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_boosters_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN total_boosters_per_hundred LIKE "-%.%" THEN (LENGTH(total_boosters_per_hundred) - 2) 
+           WHEN total_boosters_per_hundred LIKE "-%" THEN (LENGTH(total_boosters_per_hundred) - 1)
+           WHEN total_boosters_per_hundred LIKE "%.%" THEN (LENGTH(total_boosters_per_hundred) - 1) 
+		   ELSE LENGTH(total_boosters_per_hundred) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN total_boosters_per_hundred LIKE "-%.%" THEN (LENGTH(total_boosters_per_hundred) - 2) 
+		   WHEN total_boosters_per_hundred LIKE "-%" THEN (LENGTH(total_boosters_per_hundred) - 1)
+		   WHEN total_boosters_per_hundred LIKE "%.%" THEN (LENGTH(total_boosters_per_hundred) - 1) 
+		   ELSE LENGTH(total_boosters_per_hundred) 
+	  
+      END = (SELECT MAX(CASE WHEN total_boosters_per_hundred LIKE "-%.%" THEN (LENGTH(total_boosters_per_hundred) - 2) 
+							 WHEN total_boosters_per_hundred LIKE "-%" THEN (LENGTH(total_boosters_per_hundred) - 1)
+							 WHEN total_boosters_per_hundred LIKE "%.%" THEN (LENGTH(total_boosters_per_hundred) - 1) 
+							 ELSE LENGTH(total_boosters_per_hundred) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_people_vaccinated_smoothed_per_hundred) AS max_len_num_new_people_vaccinated_smoothed_per_hundred, 
+       LENGTH(new_people_vaccinated_smoothed_per_hundred) AS total_char_len,
+       CASE 
+           WHEN new_people_vaccinated_smoothed_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_people_vaccinated_smoothed_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN new_people_vaccinated_smoothed_per_hundred LIKE "-%.%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 2) 
+           WHEN new_people_vaccinated_smoothed_per_hundred LIKE "-%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 1)
+           WHEN new_people_vaccinated_smoothed_per_hundred LIKE "%.%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 1) 
+		   ELSE LENGTH(new_people_vaccinated_smoothed_per_hundred) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN new_people_vaccinated_smoothed_per_hundred LIKE "-%.%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 2) 
+		   WHEN new_people_vaccinated_smoothed_per_hundred LIKE "-%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 1)
+		   WHEN new_people_vaccinated_smoothed_per_hundred LIKE "%.%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 1) 
+		   ELSE LENGTH(new_people_vaccinated_smoothed_per_hundred) 
+	  
+      END = (SELECT MAX(CASE WHEN new_people_vaccinated_smoothed_per_hundred LIKE "-%.%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 2) 
+							 WHEN new_people_vaccinated_smoothed_per_hundred LIKE "-%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 1)
+							 WHEN new_people_vaccinated_smoothed_per_hundred LIKE "%.%" THEN (LENGTH(new_people_vaccinated_smoothed_per_hundred) - 1) 
+							 ELSE LENGTH(new_people_vaccinated_smoothed_per_hundred) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(stringency_index) AS max_len_num_stringency_index, 
+       LENGTH(stringency_index) AS total_char_len,
+       CASE 
+           WHEN stringency_index LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(stringency_index, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN stringency_index LIKE "-%.%" THEN (LENGTH(stringency_index) - 2) 
+           WHEN stringency_index LIKE "-%" THEN (LENGTH(stringency_index) - 1)
+           WHEN stringency_index LIKE "%.%" THEN (LENGTH(stringency_index) - 1) 
+		   ELSE LENGTH(stringency_index) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN stringency_index LIKE "-%.%" THEN (LENGTH(stringency_index) - 2) 
+		   WHEN stringency_index LIKE "-%" THEN (LENGTH(stringency_index) - 1)
+		   WHEN stringency_index LIKE "%.%" THEN (LENGTH(stringency_index) - 1) 
+		   ELSE LENGTH(stringency_index) 
+	  
+      END = (SELECT MAX(CASE WHEN stringency_index LIKE "-%.%" THEN (LENGTH(stringency_index) - 2) 
+							 WHEN stringency_index LIKE "-%" THEN (LENGTH(stringency_index) - 1)
+							 WHEN stringency_index LIKE "%.%" THEN (LENGTH(stringency_index) - 1) 
+							 ELSE LENGTH(stringency_index) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(population_density) AS max_len_num_population_density, 
+       LENGTH(population_density) AS total_char_len,
+       CASE 
+           WHEN population_density LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(population_density, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN population_density LIKE "-%.%" THEN (LENGTH(population_density) - 2) 
+           WHEN population_density LIKE "-%" THEN (LENGTH(population_density) - 1)
+           WHEN population_density LIKE "%.%" THEN (LENGTH(population_density) - 1) 
+		   ELSE LENGTH(population_density) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN population_density LIKE "-%.%" THEN (LENGTH(population_density) - 2) 
+		   WHEN population_density LIKE "-%" THEN (LENGTH(population_density) - 1)
+		   WHEN population_density LIKE "%.%" THEN (LENGTH(population_density) - 1) 
+		   ELSE LENGTH(population_density) 
+	  
+      END = (SELECT MAX(CASE WHEN population_density LIKE "-%.%" THEN (LENGTH(population_density) - 2) 
+							 WHEN population_density LIKE "-%" THEN (LENGTH(population_density) - 1)
+							 WHEN population_density LIKE "%.%" THEN (LENGTH(population_density) - 1) 
+							 ELSE LENGTH(population_density) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(median_age) AS max_len_num_median_age, 
+       LENGTH(median_age) AS total_char_len,
+       CASE 
+           WHEN median_age LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(median_age, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN median_age LIKE "-%.%" THEN (LENGTH(median_age) - 2) 
+           WHEN median_age LIKE "-%" THEN (LENGTH(median_age) - 1)
+           WHEN median_age LIKE "%.%" THEN (LENGTH(median_age) - 1) 
+		   ELSE LENGTH(median_age) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN median_age LIKE "-%.%" THEN (LENGTH(median_age) - 2) 
+		   WHEN median_age LIKE "-%" THEN (LENGTH(median_age) - 1)
+		   WHEN median_age LIKE "%.%" THEN (LENGTH(median_age) - 1) 
+		   ELSE LENGTH(median_age) 
+	  
+      END = (SELECT MAX(CASE WHEN median_age LIKE "-%.%" THEN (LENGTH(median_age) - 2) 
+							 WHEN median_age LIKE "-%" THEN (LENGTH(median_age) - 1)
+							 WHEN median_age LIKE "%.%" THEN (LENGTH(median_age) - 1) 
+							 ELSE LENGTH(median_age) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(aged_65_older) AS max_len_num_aged_65_older, 
+       LENGTH(aged_65_older) AS total_char_len,
+       CASE 
+           WHEN aged_65_older LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(aged_65_older, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN aged_65_older LIKE "-%.%" THEN (LENGTH(aged_65_older) - 2) 
+           WHEN aged_65_older LIKE "-%" THEN (LENGTH(aged_65_older) - 1)
+           WHEN aged_65_older LIKE "%.%" THEN (LENGTH(aged_65_older) - 1) 
+		   ELSE LENGTH(aged_65_older) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN aged_65_older LIKE "-%.%" THEN (LENGTH(aged_65_older) - 2) 
+		   WHEN aged_65_older LIKE "-%" THEN (LENGTH(aged_65_older) - 1)
+		   WHEN aged_65_older LIKE "%.%" THEN (LENGTH(aged_65_older) - 1) 
+		   ELSE LENGTH(aged_65_older) 
+	  
+      END = (SELECT MAX(CASE WHEN aged_65_older LIKE "-%.%" THEN (LENGTH(aged_65_older) - 2) 
+							 WHEN aged_65_older LIKE "-%" THEN (LENGTH(aged_65_older) - 1)
+							 WHEN aged_65_older LIKE "%.%" THEN (LENGTH(aged_65_older) - 1) 
+							 ELSE LENGTH(aged_65_older) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(aged_70_older) AS max_len_num_aged_70_older, 
+       LENGTH(aged_70_older) AS total_char_len,
+       CASE 
+           WHEN aged_70_older LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(aged_70_older, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN aged_70_older LIKE "-%.%" THEN (LENGTH(aged_70_older) - 2) 
+           WHEN aged_70_older LIKE "-%" THEN (LENGTH(aged_70_older) - 1)
+           WHEN aged_70_older LIKE "%.%" THEN (LENGTH(aged_70_older) - 1) 
+		   ELSE LENGTH(aged_70_older) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN aged_70_older LIKE "-%.%" THEN (LENGTH(aged_70_older) - 2) 
+		   WHEN aged_70_older LIKE "-%" THEN (LENGTH(aged_70_older) - 1)
+		   WHEN aged_70_older LIKE "%.%" THEN (LENGTH(aged_70_older) - 1) 
+		   ELSE LENGTH(aged_70_older) 
+	  
+      END = (SELECT MAX(CASE WHEN aged_70_older LIKE "-%.%" THEN (LENGTH(aged_70_older) - 2) 
+							 WHEN aged_70_older LIKE "-%" THEN (LENGTH(aged_70_older) - 1)
+							 WHEN aged_70_older LIKE "%.%" THEN (LENGTH(aged_70_older) - 1) 
+							 ELSE LENGTH(aged_70_older) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(gdp_per_capita) AS max_len_num_gdp_per_capita, 
+       LENGTH(gdp_per_capita) AS total_char_len,
+       CASE 
+           WHEN gdp_per_capita LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(gdp_per_capita, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN gdp_per_capita LIKE "-%.%" THEN (LENGTH(gdp_per_capita) - 2) 
+           WHEN gdp_per_capita LIKE "-%" THEN (LENGTH(gdp_per_capita) - 1)
+           WHEN gdp_per_capita LIKE "%.%" THEN (LENGTH(gdp_per_capita) - 1) 
+		   ELSE LENGTH(gdp_per_capita) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN gdp_per_capita LIKE "-%.%" THEN (LENGTH(gdp_per_capita) - 2) 
+		   WHEN gdp_per_capita LIKE "-%" THEN (LENGTH(gdp_per_capita) - 1)
+		   WHEN gdp_per_capita LIKE "%.%" THEN (LENGTH(gdp_per_capita) - 1) 
+		   ELSE LENGTH(gdp_per_capita) 
+	  
+      END = (SELECT MAX(CASE WHEN gdp_per_capita LIKE "-%.%" THEN (LENGTH(gdp_per_capita) - 2) 
+							 WHEN gdp_per_capita LIKE "-%" THEN (LENGTH(gdp_per_capita) - 1)
+							 WHEN gdp_per_capita LIKE "%.%" THEN (LENGTH(gdp_per_capita) - 1) 
+							 ELSE LENGTH(gdp_per_capita) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(extreme_poverty) AS max_len_num_extreme_poverty, 
+       LENGTH(extreme_poverty) AS total_char_len,
+       CASE 
+           WHEN extreme_poverty LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(extreme_poverty, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN extreme_poverty LIKE "-%.%" THEN (LENGTH(extreme_poverty) - 2) 
+           WHEN extreme_poverty LIKE "-%" THEN (LENGTH(extreme_poverty) - 1)
+           WHEN extreme_poverty LIKE "%.%" THEN (LENGTH(extreme_poverty) - 1) 
+		   ELSE LENGTH(extreme_poverty) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN extreme_poverty LIKE "-%.%" THEN (LENGTH(extreme_poverty) - 2) 
+		   WHEN extreme_poverty LIKE "-%" THEN (LENGTH(extreme_poverty) - 1)
+		   WHEN extreme_poverty LIKE "%.%" THEN (LENGTH(extreme_poverty) - 1) 
+		   ELSE LENGTH(extreme_poverty) 
+	  
+      END = (SELECT MAX(CASE WHEN extreme_poverty LIKE "-%.%" THEN (LENGTH(extreme_poverty) - 2) 
+							 WHEN extreme_poverty LIKE "-%" THEN (LENGTH(extreme_poverty) - 1)
+							 WHEN extreme_poverty LIKE "%.%" THEN (LENGTH(extreme_poverty) - 1) 
+							 ELSE LENGTH(extreme_poverty) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(cardiovasc_death_rate) AS max_len_num_cardiovasc_death_rate, 
+       LENGTH(cardiovasc_death_rate) AS total_char_len,
+       CASE 
+           WHEN cardiovasc_death_rate LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(cardiovasc_death_rate, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN cardiovasc_death_rate LIKE "-%.%" THEN (LENGTH(cardiovasc_death_rate) - 2) 
+           WHEN cardiovasc_death_rate LIKE "-%" THEN (LENGTH(cardiovasc_death_rate) - 1)
+           WHEN cardiovasc_death_rate LIKE "%.%" THEN (LENGTH(cardiovasc_death_rate) - 1) 
+		   ELSE LENGTH(cardiovasc_death_rate) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN cardiovasc_death_rate LIKE "-%.%" THEN (LENGTH(cardiovasc_death_rate) - 2) 
+		   WHEN cardiovasc_death_rate LIKE "-%" THEN (LENGTH(cardiovasc_death_rate) - 1)
+		   WHEN cardiovasc_death_rate LIKE "%.%" THEN (LENGTH(cardiovasc_death_rate) - 1) 
+		   ELSE LENGTH(cardiovasc_death_rate) 
+	  
+      END = (SELECT MAX(CASE WHEN cardiovasc_death_rate LIKE "-%.%" THEN (LENGTH(cardiovasc_death_rate) - 2) 
+							 WHEN cardiovasc_death_rate LIKE "-%" THEN (LENGTH(cardiovasc_death_rate) - 1)
+							 WHEN cardiovasc_death_rate LIKE "%.%" THEN (LENGTH(cardiovasc_death_rate) - 1) 
+							 ELSE LENGTH(cardiovasc_death_rate) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(diabetes_prevalence) AS max_len_num_diabetes_prevalence, 
+       LENGTH(diabetes_prevalence) AS total_char_len,
+       CASE 
+           WHEN diabetes_prevalence LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(diabetes_prevalence, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN diabetes_prevalence LIKE "-%.%" THEN (LENGTH(diabetes_prevalence) - 2) 
+           WHEN diabetes_prevalence LIKE "-%" THEN (LENGTH(diabetes_prevalence) - 1)
+           WHEN diabetes_prevalence LIKE "%.%" THEN (LENGTH(diabetes_prevalence) - 1) 
+		   ELSE LENGTH(diabetes_prevalence) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN diabetes_prevalence LIKE "-%.%" THEN (LENGTH(diabetes_prevalence) - 2) 
+		   WHEN diabetes_prevalence LIKE "-%" THEN (LENGTH(diabetes_prevalence) - 1)
+		   WHEN diabetes_prevalence LIKE "%.%" THEN (LENGTH(diabetes_prevalence) - 1) 
+		   ELSE LENGTH(diabetes_prevalence) 
+	  
+      END = (SELECT MAX(CASE WHEN diabetes_prevalence LIKE "-%.%" THEN (LENGTH(diabetes_prevalence) - 2) 
+							 WHEN diabetes_prevalence LIKE "-%" THEN (LENGTH(diabetes_prevalence) - 1)
+							 WHEN diabetes_prevalence LIKE "%.%" THEN (LENGTH(diabetes_prevalence) - 1) 
+							 ELSE LENGTH(diabetes_prevalence) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(female_smokers) AS max_len_num_female_smokers, 
+       LENGTH(female_smokers) AS total_char_len,
+       CASE 
+           WHEN female_smokers LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(female_smokers, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN female_smokers LIKE "-%.%" THEN (LENGTH(female_smokers) - 2) 
+           WHEN female_smokers LIKE "-%" THEN (LENGTH(female_smokers) - 1)
+           WHEN female_smokers LIKE "%.%" THEN (LENGTH(female_smokers) - 1) 
+		   ELSE LENGTH(female_smokers) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN female_smokers LIKE "-%.%" THEN (LENGTH(female_smokers) - 2) 
+		   WHEN female_smokers LIKE "-%" THEN (LENGTH(female_smokers) - 1)
+		   WHEN female_smokers LIKE "%.%" THEN (LENGTH(female_smokers) - 1) 
+		   ELSE LENGTH(female_smokers) 
+	  
+      END = (SELECT MAX(CASE WHEN female_smokers LIKE "-%.%" THEN (LENGTH(female_smokers) - 2) 
+							 WHEN female_smokers LIKE "-%" THEN (LENGTH(female_smokers) - 1)
+							 WHEN female_smokers LIKE "%.%" THEN (LENGTH(female_smokers) - 1) 
+							 ELSE LENGTH(female_smokers) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(male_smokers) AS max_len_num_male_smokers, 
+       LENGTH(male_smokers) AS total_char_len,
+       CASE 
+           WHEN male_smokers LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(male_smokers, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN male_smokers LIKE "-%.%" THEN (LENGTH(male_smokers) - 2) 
+           WHEN male_smokers LIKE "-%" THEN (LENGTH(male_smokers) - 1)
+           WHEN male_smokers LIKE "%.%" THEN (LENGTH(male_smokers) - 1) 
+		   ELSE LENGTH(male_smokers) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN male_smokers LIKE "-%.%" THEN (LENGTH(male_smokers) - 2) 
+		   WHEN male_smokers LIKE "-%" THEN (LENGTH(male_smokers) - 1)
+		   WHEN male_smokers LIKE "%.%" THEN (LENGTH(male_smokers) - 1) 
+		   ELSE LENGTH(male_smokers) 
+	  
+      END = (SELECT MAX(CASE WHEN male_smokers LIKE "-%.%" THEN (LENGTH(male_smokers) - 2) 
+							 WHEN male_smokers LIKE "-%" THEN (LENGTH(male_smokers) - 1)
+							 WHEN male_smokers LIKE "%.%" THEN (LENGTH(male_smokers) - 1) 
+							 ELSE LENGTH(male_smokers) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(handwashing_facilities) AS max_len_num_handwashing_facilities, 
+       LENGTH(handwashing_facilities) AS total_char_len,
+       CASE 
+           WHEN handwashing_facilities LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(handwashing_facilities, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN handwashing_facilities LIKE "-%.%" THEN (LENGTH(handwashing_facilities) - 2) 
+           WHEN handwashing_facilities LIKE "-%" THEN (LENGTH(handwashing_facilities) - 1)
+           WHEN handwashing_facilities LIKE "%.%" THEN (LENGTH(handwashing_facilities) - 1) 
+		   ELSE LENGTH(handwashing_facilities) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN handwashing_facilities LIKE "-%.%" THEN (LENGTH(handwashing_facilities) - 2) 
+		   WHEN handwashing_facilities LIKE "-%" THEN (LENGTH(handwashing_facilities) - 1)
+		   WHEN handwashing_facilities LIKE "%.%" THEN (LENGTH(handwashing_facilities) - 1) 
+		   ELSE LENGTH(handwashing_facilities) 
+	  
+      END = (SELECT MAX(CASE WHEN handwashing_facilities LIKE "-%.%" THEN (LENGTH(handwashing_facilities) - 2) 
+							 WHEN handwashing_facilities LIKE "-%" THEN (LENGTH(handwashing_facilities) - 1)
+							 WHEN handwashing_facilities LIKE "%.%" THEN (LENGTH(handwashing_facilities) - 1) 
+							 ELSE LENGTH(handwashing_facilities) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(hospital_beds_per_thousand) AS max_len_num_hospital_beds_per_thousand, 
+       LENGTH(hospital_beds_per_thousand) AS total_char_len,
+       CASE 
+           WHEN hospital_beds_per_thousand LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(hospital_beds_per_thousand, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN hospital_beds_per_thousand LIKE "-%.%" THEN (LENGTH(hospital_beds_per_thousand) - 2) 
+           WHEN hospital_beds_per_thousand LIKE "-%" THEN (LENGTH(hospital_beds_per_thousand) - 1)
+           WHEN hospital_beds_per_thousand LIKE "%.%" THEN (LENGTH(hospital_beds_per_thousand) - 1) 
+		   ELSE LENGTH(hospital_beds_per_thousand) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN hospital_beds_per_thousand LIKE "-%.%" THEN (LENGTH(hospital_beds_per_thousand) - 2) 
+		   WHEN hospital_beds_per_thousand LIKE "-%" THEN (LENGTH(hospital_beds_per_thousand) - 1)
+		   WHEN hospital_beds_per_thousand LIKE "%.%" THEN (LENGTH(hospital_beds_per_thousand) - 1) 
+		   ELSE LENGTH(hospital_beds_per_thousand) 
+	  
+      END = (SELECT MAX(CASE WHEN hospital_beds_per_thousand LIKE "-%.%" THEN (LENGTH(hospital_beds_per_thousand) - 2) 
+							 WHEN hospital_beds_per_thousand LIKE "-%" THEN (LENGTH(hospital_beds_per_thousand) - 1)
+							 WHEN hospital_beds_per_thousand LIKE "%.%" THEN (LENGTH(hospital_beds_per_thousand) - 1) 
+							 ELSE LENGTH(hospital_beds_per_thousand) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(life_expectancy) AS max_len_num_life_expectancy, 
+       LENGTH(life_expectancy) AS total_char_len,
+       CASE 
+           WHEN life_expectancy LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(life_expectancy, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN life_expectancy LIKE "-%.%" THEN (LENGTH(life_expectancy) - 2) 
+           WHEN life_expectancy LIKE "-%" THEN (LENGTH(life_expectancy) - 1)
+           WHEN life_expectancy LIKE "%.%" THEN (LENGTH(life_expectancy) - 1) 
+		   ELSE LENGTH(life_expectancy) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN life_expectancy LIKE "-%.%" THEN (LENGTH(life_expectancy) - 2) 
+		   WHEN life_expectancy LIKE "-%" THEN (LENGTH(life_expectancy) - 1)
+		   WHEN life_expectancy LIKE "%.%" THEN (LENGTH(life_expectancy) - 1) 
+		   ELSE LENGTH(life_expectancy) 
+	  
+      END = (SELECT MAX(CASE WHEN life_expectancy LIKE "-%.%" THEN (LENGTH(life_expectancy) - 2) 
+							 WHEN life_expectancy LIKE "-%" THEN (LENGTH(life_expectancy) - 1)
+							 WHEN life_expectancy LIKE "%.%" THEN (LENGTH(life_expectancy) - 1) 
+							 ELSE LENGTH(life_expectancy) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(human_development_index) AS max_len_num_human_development_index, 
+       LENGTH(human_development_index) AS total_char_len,
+       CASE 
+           WHEN human_development_index LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(human_development_index, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN human_development_index LIKE "-%.%" THEN (LENGTH(human_development_index) - 2) 
+           WHEN human_development_index LIKE "-%" THEN (LENGTH(human_development_index) - 1)
+           WHEN human_development_index LIKE "%.%" THEN (LENGTH(human_development_index) - 1) 
+		   ELSE LENGTH(human_development_index) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN human_development_index LIKE "-%.%" THEN (LENGTH(human_development_index) - 2) 
+		   WHEN human_development_index LIKE "-%" THEN (LENGTH(human_development_index) - 1)
+		   WHEN human_development_index LIKE "%.%" THEN (LENGTH(human_development_index) - 1) 
+		   ELSE LENGTH(human_development_index) 
+	  
+      END = (SELECT MAX(CASE WHEN human_development_index LIKE "-%.%" THEN (LENGTH(human_development_index) - 2) 
+							 WHEN human_development_index LIKE "-%" THEN (LENGTH(human_development_index) - 1)
+							 WHEN human_development_index LIKE "%.%" THEN (LENGTH(human_development_index) - 1) 
+							 ELSE LENGTH(human_development_index) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(excess_mortality_cumulative_absolute) AS max_len_num_excess_mortality_cumulative_absolute, 
+       LENGTH(excess_mortality_cumulative_absolute) AS total_char_len,
+       CASE 
+           WHEN excess_mortality_cumulative_absolute LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(excess_mortality_cumulative_absolute, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN excess_mortality_cumulative_absolute LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 2) 
+           WHEN excess_mortality_cumulative_absolute LIKE "-%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 1)
+           WHEN excess_mortality_cumulative_absolute LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 1) 
+		   ELSE LENGTH(excess_mortality_cumulative_absolute) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN excess_mortality_cumulative_absolute LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 2) 
+		   WHEN excess_mortality_cumulative_absolute LIKE "-%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 1)
+		   WHEN excess_mortality_cumulative_absolute LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 1) 
+		   ELSE LENGTH(excess_mortality_cumulative_absolute) 
+	  
+      END = (SELECT MAX(CASE WHEN excess_mortality_cumulative_absolute LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 2) 
+							 WHEN excess_mortality_cumulative_absolute LIKE "-%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 1)
+							 WHEN excess_mortality_cumulative_absolute LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative_absolute) - 1) 
+							 ELSE LENGTH(excess_mortality_cumulative_absolute) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(excess_mortality_cumulative) AS max_len_num_excess_mortality_cumulative, 
+       LENGTH(excess_mortality_cumulative) AS total_char_len,
+       CASE 
+           WHEN excess_mortality_cumulative LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(excess_mortality_cumulative, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN excess_mortality_cumulative LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative) - 2) 
+           WHEN excess_mortality_cumulative LIKE "-%" THEN (LENGTH(excess_mortality_cumulative) - 1)
+           WHEN excess_mortality_cumulative LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative) - 1) 
+		   ELSE LENGTH(excess_mortality_cumulative) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN excess_mortality_cumulative LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative) - 2) 
+		   WHEN excess_mortality_cumulative LIKE "-%" THEN (LENGTH(excess_mortality_cumulative) - 1)
+		   WHEN excess_mortality_cumulative LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative) - 1) 
+		   ELSE LENGTH(excess_mortality_cumulative) 
+	  
+      END = (SELECT MAX(CASE WHEN excess_mortality_cumulative LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative) - 2) 
+							 WHEN excess_mortality_cumulative LIKE "-%" THEN (LENGTH(excess_mortality_cumulative) - 1)
+							 WHEN excess_mortality_cumulative LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative) - 1) 
+							 ELSE LENGTH(excess_mortality_cumulative) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(excess_mortality) AS max_len_num_excess_mortality, 
+       LENGTH(excess_mortality) AS total_char_len,
+       CASE 
+           WHEN excess_mortality LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(excess_mortality, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN excess_mortality LIKE "-%.%" THEN (LENGTH(excess_mortality) - 2) 
+           WHEN excess_mortality LIKE "-%" THEN (LENGTH(excess_mortality) - 1)
+           WHEN excess_mortality LIKE "%.%" THEN (LENGTH(excess_mortality) - 1) 
+		   ELSE LENGTH(excess_mortality) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN excess_mortality LIKE "-%.%" THEN (LENGTH(excess_mortality) - 2) 
+		   WHEN excess_mortality LIKE "-%" THEN (LENGTH(excess_mortality) - 1)
+		   WHEN excess_mortality LIKE "%.%" THEN (LENGTH(excess_mortality) - 1) 
+		   ELSE LENGTH(excess_mortality) 
+	  
+      END = (SELECT MAX(CASE WHEN excess_mortality LIKE "-%.%" THEN (LENGTH(excess_mortality) - 2) 
+							 WHEN excess_mortality LIKE "-%" THEN (LENGTH(excess_mortality) - 1)
+							 WHEN excess_mortality LIKE "%.%" THEN (LENGTH(excess_mortality) - 1) 
+							 ELSE LENGTH(excess_mortality) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(excess_mortality_cumulative_per_million) AS max_len_num_excess_mortality_cumulative_per_million, 
+       LENGTH(excess_mortality_cumulative_per_million) AS total_char_len,
+       CASE 
+           WHEN excess_mortality_cumulative_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(excess_mortality_cumulative_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+
+       CASE
+           WHEN excess_mortality_cumulative_per_million LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 2) 
+           WHEN excess_mortality_cumulative_per_million LIKE "-%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 1)
+           WHEN excess_mortality_cumulative_per_million LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 1) 
+		   ELSE LENGTH(excess_mortality_cumulative_per_million) END AS MAX_total_digit_len
+
+FROM data_load
+
+WHERE CASE WHEN excess_mortality_cumulative_per_million LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 2) 
+		   WHEN excess_mortality_cumulative_per_million LIKE "-%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 1)
+		   WHEN excess_mortality_cumulative_per_million LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 1) 
+		   ELSE LENGTH(excess_mortality_cumulative_per_million) 
+	  
+      END = (SELECT MAX(CASE WHEN excess_mortality_cumulative_per_million LIKE "-%.%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 2) 
+							 WHEN excess_mortality_cumulative_per_million LIKE "-%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 1)
+							 WHEN excess_mortality_cumulative_per_million LIKE "%.%" THEN (LENGTH(excess_mortality_cumulative_per_million) - 1) 
+							 ELSE LENGTH(excess_mortality_cumulative_per_million) END)
+			 FROM data_load)
+         
+ORDER BY decimal_number ASC;
+
+
+
+-- B) Scale - MAX Length:
+SELECT DISTINCT(new_cases_smoothed) AS max_len_num_new_cases_smoothed, 
+       CASE 
+           WHEN new_cases_smoothed LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_cases_smoothed NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_deaths_smoothed) AS max_len_num_new_deaths_smoothed, 
+       CASE 
+           WHEN new_deaths_smoothed LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_deaths_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_deaths_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_deaths_smoothed, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_deaths_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_deaths_smoothed, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_deaths_smoothed NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_deaths_smoothed, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_cases_per_million) AS max_len_num_total_cases_per_million, 
+       CASE 
+           WHEN total_cases_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_cases_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN total_cases_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_cases_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN total_cases_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_cases_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN total_cases_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(total_cases_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_cases_per_million) AS max_len_num_new_cases_per_million, 
+       CASE 
+           WHEN new_cases_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_cases_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_cases_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_cases_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_cases_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_cases_smoothed_per_million) AS max_len_num_new_cases_smoothed_per_million, 
+       CASE 
+           WHEN new_cases_smoothed_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_cases_smoothed_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_cases_smoothed_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_cases_smoothed_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_cases_smoothed_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_cases_smoothed_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_deaths_per_million) AS max_len_num_total_deaths_per_million, 
+       CASE 
+           WHEN total_deaths_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_deaths_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN total_deaths_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_deaths_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN total_deaths_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_deaths_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN total_deaths_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(total_deaths_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_deaths_per_million) AS max_len_num_new_deaths_per_million, 
+       CASE 
+           WHEN new_deaths_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_deaths_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_deaths_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_deaths_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_deaths_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_deaths_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_deaths_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_deaths_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_deaths_smoothed_per_million) AS max_len_num_new_deaths_smoothed_per_million, 
+       CASE 
+           WHEN new_deaths_smoothed_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_deaths_smoothed_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_deaths_smoothed_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_deaths_smoothed_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_deaths_smoothed_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_deaths_smoothed_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_deaths_smoothed_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_deaths_smoothed_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(reproduction_rate) AS max_len_num_reproduction_rate, 
+       CASE 
+           WHEN reproduction_rate LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(reproduction_rate, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN reproduction_rate NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(reproduction_rate, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN reproduction_rate NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(reproduction_rate, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN reproduction_rate NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(reproduction_rate, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(icu_patients_per_million) AS max_len_num_icu_patients_per_million, 
+       CASE 
+           WHEN icu_patients_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(icu_patients_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN icu_patients_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(icu_patients_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN icu_patients_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(icu_patients_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN icu_patients_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(icu_patients_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(hosp_patients_per_million) AS max_len_num_hosp_patients_per_million, 
+       CASE 
+           WHEN hosp_patients_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(hosp_patients_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN hosp_patients_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(hosp_patients_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN hosp_patients_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(hosp_patients_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN hosp_patients_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(hosp_patients_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(weekly_icu_admissions_per_million) AS max_len_num_weekly_icu_admissions_per_million, 
+       CASE 
+           WHEN weekly_icu_admissions_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(weekly_icu_admissions_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN weekly_icu_admissions_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(weekly_icu_admissions_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN weekly_icu_admissions_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(weekly_icu_admissions_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN weekly_icu_admissions_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(weekly_icu_admissions_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(weekly_hosp_admissions_per_million) AS max_len_num_weekly_hosp_admissions_per_million, 
+       CASE 
+           WHEN weekly_hosp_admissions_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(weekly_hosp_admissions_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN weekly_hosp_admissions_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(weekly_hosp_admissions_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN weekly_hosp_admissions_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(weekly_hosp_admissions_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN weekly_hosp_admissions_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(weekly_hosp_admissions_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_tests_per_thousand) AS max_len_num_total_tests_per_thousand, 
+       CASE 
+           WHEN total_tests_per_thousand LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_tests_per_thousand, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN total_tests_per_thousand NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_tests_per_thousand, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN total_tests_per_thousand NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_tests_per_thousand, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN total_tests_per_thousand NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(total_tests_per_thousand, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_tests_per_thousand) AS max_len_num_new_tests_per_thousand, 
+       CASE 
+           WHEN new_tests_per_thousand LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_tests_per_thousand, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_tests_per_thousand NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_tests_per_thousand, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_tests_per_thousand NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_tests_per_thousand, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_tests_per_thousand NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_tests_per_thousand, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_tests_smoothed) AS max_len_num_new_tests_smoothed, 
+       CASE 
+           WHEN new_tests_smoothed LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_tests_smoothed, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_tests_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_tests_smoothed, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_tests_smoothed NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_tests_smoothed, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_tests_smoothed NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_tests_smoothed, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+-- Important! The new_tests_smoothed feature was mistakenly assumed to be a numerical continuous feature in the Metadata_Report.xlsm file. 
+-- The new_tests_smoothed feature is actually a numerically discrete feature.
+-- There is no need to update the query. The query will be left as is.
+
+
+SELECT DISTINCT(new_tests_smoothed_per_thousand) AS max_len_num_new_tests_smoothed_per_thousand, 
+       CASE 
+           WHEN new_tests_smoothed_per_thousand LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_tests_smoothed_per_thousand, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_tests_smoothed_per_thousand NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_tests_smoothed_per_thousand, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_tests_smoothed_per_thousand NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_tests_smoothed_per_thousand, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_tests_smoothed_per_thousand NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_tests_smoothed_per_thousand, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(positive_rate) AS max_len_num_positive_rate, 
+       CASE 
+           WHEN positive_rate LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(positive_rate, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN positive_rate NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(positive_rate, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN positive_rate NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(positive_rate, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN positive_rate NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(positive_rate, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(tests_per_case) AS max_len_num_tests_per_case, 
+       CASE 
+           WHEN tests_per_case LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(tests_per_case, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN tests_per_case NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(tests_per_case, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN tests_per_case NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(tests_per_case, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN tests_per_case NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(tests_per_case, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_vaccinations_per_hundred) AS max_len_num_total_vaccinations_per_hundred, 
+       CASE 
+           WHEN total_vaccinations_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_vaccinations_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN total_vaccinations_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_vaccinations_per_hundred, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN total_vaccinations_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_vaccinations_per_hundred, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN total_vaccinations_per_hundred NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(total_vaccinations_per_hundred, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(people_vaccinated_per_hundred) AS max_len_num_people_vaccinated_per_hundred, 
+       CASE 
+           WHEN people_vaccinated_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(people_vaccinated_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN people_vaccinated_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(people_vaccinated_per_hundred, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN people_vaccinated_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(people_vaccinated_per_hundred, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN people_vaccinated_per_hundred NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(people_vaccinated_per_hundred, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(people_fully_vaccinated_per_hundred) AS max_len_num_people_fully_vaccinated_per_hundred, 
+       CASE 
+           WHEN people_fully_vaccinated_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(people_fully_vaccinated_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN people_fully_vaccinated_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(people_fully_vaccinated_per_hundred, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN people_fully_vaccinated_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(people_fully_vaccinated_per_hundred, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN people_fully_vaccinated_per_hundred NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(people_fully_vaccinated_per_hundred, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(total_boosters_per_hundred) AS max_len_num_total_boosters_per_hundred, 
+       CASE 
+           WHEN total_boosters_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(total_boosters_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN total_boosters_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_boosters_per_hundred, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN total_boosters_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(total_boosters_per_hundred, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN total_boosters_per_hundred NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(total_boosters_per_hundred, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(new_people_vaccinated_smoothed_per_hundred) AS max_len_num_new_people_vaccinated_smoothed_per_hundred, 
+       CASE 
+           WHEN new_people_vaccinated_smoothed_per_hundred LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(new_people_vaccinated_smoothed_per_hundred, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN new_people_vaccinated_smoothed_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_people_vaccinated_smoothed_per_hundred, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN new_people_vaccinated_smoothed_per_hundred NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(new_people_vaccinated_smoothed_per_hundred, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN new_people_vaccinated_smoothed_per_hundred NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(new_people_vaccinated_smoothed_per_hundred, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(stringency_index) AS max_len_num_stringency_index, 
+       CASE 
+           WHEN stringency_index LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(stringency_index, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN stringency_index NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(stringency_index, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN stringency_index NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(stringency_index, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN stringency_index NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(stringency_index, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(population_density) AS max_len_num_population_density, 
+       CASE 
+           WHEN population_density LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(population_density, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN population_density NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(population_density, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN population_density NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(population_density, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN population_density NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(population_density, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(median_age) AS max_len_num_median_age, 
+       CASE 
+           WHEN median_age LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(median_age, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN median_age NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(median_age, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN median_age NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(median_age, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN median_age NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(median_age, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(aged_65_older) AS max_len_num_aged_65_older, 
+       CASE 
+           WHEN aged_65_older LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(aged_65_older, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN aged_65_older NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(aged_65_older, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN aged_65_older NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(aged_65_older, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN aged_65_older NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(aged_65_older, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(aged_70_older) AS max_len_num_aged_70_older, 
+       CASE 
+           WHEN aged_70_older LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(aged_70_older, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN aged_70_older NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(aged_70_older, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN aged_70_older NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(aged_70_older, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN aged_70_older NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(aged_70_older, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(gdp_per_capita) AS max_len_num_gdp_per_capita, 
+       CASE 
+           WHEN gdp_per_capita LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(gdp_per_capita, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN gdp_per_capita NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(gdp_per_capita, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN gdp_per_capita NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(gdp_per_capita, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN gdp_per_capita NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(gdp_per_capita, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(extreme_poverty) AS max_len_num_extreme_poverty, 
+       CASE 
+           WHEN extreme_poverty LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(extreme_poverty, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN extreme_poverty NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(extreme_poverty, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN extreme_poverty NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(extreme_poverty, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN extreme_poverty NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(extreme_poverty, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(cardiovasc_death_rate) AS max_len_num_cardiovasc_death_rate, 
+       CASE 
+           WHEN cardiovasc_death_rate LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(cardiovasc_death_rate, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN cardiovasc_death_rate NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(cardiovasc_death_rate, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN cardiovasc_death_rate NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(cardiovasc_death_rate, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN cardiovasc_death_rate NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(cardiovasc_death_rate, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(diabetes_prevalence) AS max_len_num_diabetes_prevalence, 
+       CASE 
+           WHEN diabetes_prevalence LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(diabetes_prevalence, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN diabetes_prevalence NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(diabetes_prevalence, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN diabetes_prevalence NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(diabetes_prevalence, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN diabetes_prevalence NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(diabetes_prevalence, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(female_smokers) AS max_len_num_female_smokers, 
+       CASE 
+           WHEN female_smokers LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(female_smokers, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN female_smokers NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(female_smokers, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN female_smokers NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(female_smokers, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN female_smokers NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(female_smokers, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(male_smokers) AS max_len_num_male_smokers, 
+       CASE 
+           WHEN male_smokers LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(male_smokers, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN male_smokers NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(male_smokers, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN male_smokers NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(male_smokers, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN male_smokers NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(male_smokers, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(handwashing_facilities) AS max_len_num_handwashing_facilities, 
+       CASE 
+           WHEN handwashing_facilities LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(handwashing_facilities, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN handwashing_facilities NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(handwashing_facilities, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN handwashing_facilities NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(handwashing_facilities, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN handwashing_facilities NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(handwashing_facilities, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(hospital_beds_per_thousand) AS max_len_num_hospital_beds_per_thousand, 
+       CASE 
+           WHEN hospital_beds_per_thousand LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(hospital_beds_per_thousand, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN hospital_beds_per_thousand NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(hospital_beds_per_thousand, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN hospital_beds_per_thousand NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(hospital_beds_per_thousand, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN hospital_beds_per_thousand NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(hospital_beds_per_thousand, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(life_expectancy) AS max_len_num_life_expectancy, 
+       CASE 
+           WHEN life_expectancy LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(life_expectancy, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN life_expectancy NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(life_expectancy, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN life_expectancy NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(life_expectancy, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN life_expectancy NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(life_expectancy, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(human_development_index) AS max_len_num_human_development_index, 
+       CASE 
+           WHEN human_development_index LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(human_development_index, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN human_development_index NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(human_development_index, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN human_development_index NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(human_development_index, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN human_development_index NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(human_development_index, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(excess_mortality_cumulative_absolute) AS max_len_num_excess_mortality_cumulative_absolute, 
+       CASE 
+           WHEN excess_mortality_cumulative_absolute LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(excess_mortality_cumulative_absolute, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN excess_mortality_cumulative_absolute NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_absolute, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN excess_mortality_cumulative_absolute NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_absolute, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN excess_mortality_cumulative_absolute NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_absolute, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(excess_mortality_cumulative) AS max_len_num_excess_mortality_cumulative, 
+       CASE 
+           WHEN excess_mortality_cumulative LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(excess_mortality_cumulative, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN excess_mortality_cumulative NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN excess_mortality_cumulative NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN excess_mortality_cumulative NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(excess_mortality) AS max_len_num_excess_mortality, 
+       CASE 
+           WHEN excess_mortality LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(excess_mortality, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN excess_mortality NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(excess_mortality, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN excess_mortality NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(excess_mortality, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN excess_mortality NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(excess_mortality, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+
+
+SELECT DISTINCT(excess_mortality_cumulative_per_million) AS max_len_num_excess_mortality_cumulative_per_million, 
+       CASE 
+           WHEN excess_mortality_cumulative_per_million LIKE "%.%" THEN 
+		   (CASE WHEN CAST(SUBSTRING_INDEX(excess_mortality_cumulative_per_million, '.', -1) AS SIGNED INT) > 0 THEN "True" ELSE "False" END) 
+		   ELSE "False" END AS decimal_number,
+                    
+       CASE WHEN excess_mortality_cumulative_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_per_million, '.', -1)) END AS MAX_decimal_digits_len
+
+FROM data_load
+    
+WHERE CASE WHEN excess_mortality_cumulative_per_million NOT LIKE "%.%" THEN "" ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_per_million, '.', -1))
+
+      END = (SELECT MAX(CASE WHEN excess_mortality_cumulative_per_million NOT LIKE "%.%" THEN "" 
+                             ELSE LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_per_million, '.', -1)) END)
+			 FROM data_load)
+
+ORDER BY decimal_number ASC;
+-- Important! As observed in 3_LDI_Completeness.sql, another anomaly has been observed in the above query geared towards the excess_mortality_cumulative_per_million feature. 
+-- The MAX_decimal_digits_len returns 9 but the correct number of decimal digits when counted is actually 8. 
+
+
+
+-- Next Step:
+-- 3. Confirm the type-casted fields are equivalent to the original VARCHAR fields with a Boolean feature; do not use the ALTER or UPDATE clause in this step.
 
-SELECT DISTINCT(CONCAT(iso_code, '; ', LENGTH(iso_code))) AS max_len_iso_code FROM master_dataset
-WHERE LENGTH(iso_code) = (SELECT MAX(LENGTH(iso_code)) FROM master_dataset);
 
 
-SELECT DISTINCT(CONCAT(continent, '; ', LENGTH(continent))) AS max_len_continent FROM master_dataset
-WHERE LENGTH(continent) = (SELECT MAX(LENGTH(continent)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(location, '; ', LENGTH(location))) AS max_len_location FROM master_dataset
-WHERE LENGTH(location) = (SELECT MAX(LENGTH(location)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(tests_units, '; ', LENGTH(tests_units))) AS max_len_tests_units FROM master_dataset
-WHERE LENGTH(tests_units) = (SELECT MAX(LENGTH(tests_units)) FROM master_dataset);
-
-
-
--- Numerical Features - MAX Length:
-
--- IMPORTANT: The 3rd value of each query's output is a tuple consisting of the number of digits before and after the decimal. It is NOT a direct arguement for decimal-value data-types.
-
-SELECT DISTINCT(CONCAT(total_cases, '; ', LENGTH(total_cases), '; ', '(', LENGTH(SUBSTRING_INDEX(total_cases, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_cases, '.', -1)), ')')) AS max_len_total_cases FROM master_dataset
-WHERE LENGTH(total_cases) = (SELECT MAX(LENGTH(total_cases)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_cases, '; ', LENGTH(new_cases), '; ', '(', LENGTH(SUBSTRING_INDEX(new_cases, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_cases, '.', -1)), ')')) AS max_len_new_cases FROM master_dataset
-WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_cases_smoothed, '; ', LENGTH(new_cases_smoothed), '; ', '(', LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_cases_smoothed, '.', -1)), ')')) AS max_len_new_cases_smoothed FROM master_dataset
-WHERE LENGTH(new_cases_smoothed) = (SELECT MAX(LENGTH(new_cases_smoothed)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_deaths, '; ', LENGTH(total_deaths), '; ', '(', LENGTH(SUBSTRING_INDEX(total_deaths, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_deaths, '.', -1)), ')')) AS max_len_total_deaths FROM master_dataset
-WHERE LENGTH(total_deaths) = (SELECT MAX(LENGTH(total_deaths)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_deaths, '; ', LENGTH(new_deaths), '; ', '(', LENGTH(SUBSTRING_INDEX(new_deaths, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_deaths, '.', -1)), ')')) AS max_len_new_deaths FROM master_dataset
-WHERE LENGTH(new_deaths) = (SELECT MAX(LENGTH(new_deaths)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_deaths_smoothed, '; ', LENGTH(new_deaths_smoothed), '; ', '(', LENGTH(SUBSTRING_INDEX(new_deaths_smoothed, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_deaths_smoothed, '.', -1)), ')')) AS max_len_new_deaths_smoothed FROM master_dataset
-WHERE LENGTH(new_deaths_smoothed) = (SELECT MAX(LENGTH(new_deaths_smoothed)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_cases_per_million, '; ', LENGTH(total_cases_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(total_cases_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_cases_per_million, '.', -1)), ')')) AS max_len_total_cases_per_million FROM master_dataset
-WHERE LENGTH(total_cases_per_million) = (SELECT MAX(LENGTH(total_cases_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_cases_per_million, '; ', LENGTH(new_cases_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(new_cases_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_cases_per_million, '.', -1)), ')')) AS max_len_new_cases_per_million FROM master_dataset
-WHERE LENGTH(new_cases_per_million) = (SELECT MAX(LENGTH(new_cases_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_cases_smoothed_per_million, '; ', LENGTH(new_cases_smoothed_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(new_cases_smoothed_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_cases_smoothed_per_million, '.', -1)), ')')) AS max_len_new_cases_smoothed_per_million FROM master_dataset
-WHERE LENGTH(new_cases_smoothed_per_million) = (SELECT MAX(LENGTH(new_cases_smoothed_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_deaths_per_million, '; ', LENGTH(total_deaths_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(total_deaths_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_deaths_per_million, '.', -1)), ')')) AS max_len_total_deaths_per_million FROM master_dataset
-WHERE LENGTH(total_deaths_per_million) = (SELECT MAX(LENGTH(total_deaths_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_deaths_per_million, '; ', LENGTH(new_deaths_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(new_deaths_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_deaths_per_million, '.', -1)), ')')) AS max_len_new_deaths_per_million FROM master_dataset
-WHERE LENGTH(new_deaths_per_million) = (SELECT MAX(LENGTH(new_deaths_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_deaths_smoothed_per_million, '; ', LENGTH(new_deaths_smoothed_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(new_deaths_smoothed_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_deaths_smoothed_per_million, '.', -1)), ')')) AS max_len_new_deaths_smoothed_per_million FROM master_dataset
-WHERE LENGTH(new_deaths_smoothed_per_million) = (SELECT MAX(LENGTH(new_deaths_smoothed_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(reproduction_rate, '; ', LENGTH(reproduction_rate), '; ', '(', LENGTH(SUBSTRING_INDEX(reproduction_rate, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(reproduction_rate, '.', -1)), ')')) AS max_len_reproduction_rate FROM master_dataset
-WHERE LENGTH(reproduction_rate) = (SELECT MAX(LENGTH(reproduction_rate)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(icu_patients, '; ', LENGTH(icu_patients), '; ', '(', LENGTH(SUBSTRING_INDEX(icu_patients, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(icu_patients, '.', -1)), ')')) AS max_len_icu_patients FROM master_dataset
-WHERE LENGTH(icu_patients) = (SELECT MAX(LENGTH(icu_patients)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(icu_patients_per_million, '; ', LENGTH(icu_patients_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(icu_patients_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(icu_patients_per_million, '.', -1)), ')')) AS max_len_icu_patients_per_million FROM master_dataset
-WHERE LENGTH(icu_patients_per_million) = (SELECT MAX(LENGTH(icu_patients_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(hosp_patients, '; ', LENGTH(hosp_patients), '; ', '(', LENGTH(SUBSTRING_INDEX(hosp_patients, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(hosp_patients, '.', -1)), ')')) AS max_len_hosp_patients FROM master_dataset
-WHERE LENGTH(hosp_patients) = (SELECT MAX(LENGTH(hosp_patients)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(hosp_patients_per_million, '; ', LENGTH(hosp_patients_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(hosp_patients_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(hosp_patients_per_million, '.', -1)), ')')) AS max_len_hosp_patients_per_million FROM master_dataset
-WHERE LENGTH(hosp_patients_per_million) = (SELECT MAX(LENGTH(hosp_patients_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(weekly_icu_admissions, '; ', LENGTH(weekly_icu_admissions), '; ', '(', LENGTH(SUBSTRING_INDEX(weekly_icu_admissions, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(weekly_icu_admissions, '.', -1)), ')')) AS max_len_weekly_icu_admissions FROM master_dataset
-WHERE LENGTH(weekly_icu_admissions) = (SELECT MAX(LENGTH(weekly_icu_admissions)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(weekly_icu_admissions_per_million, '; ', LENGTH(weekly_icu_admissions_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(weekly_icu_admissions_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(weekly_icu_admissions_per_million, '.', -1)), ')')) AS max_len_weekly_icu_admissions_per_million FROM master_dataset
-WHERE LENGTH(weekly_icu_admissions_per_million) = (SELECT MAX(LENGTH(weekly_icu_admissions_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(weekly_hosp_admissions, '; ', LENGTH(weekly_hosp_admissions), '; ', '(', LENGTH(SUBSTRING_INDEX(weekly_hosp_admissions, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(weekly_hosp_admissions, '.', -1)), ')')) AS max_len_weekly_hosp_admissions FROM master_dataset
-WHERE LENGTH(weekly_hosp_admissions) = (SELECT MAX(LENGTH(weekly_hosp_admissions)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(weekly_hosp_admissions_per_million, '; ', LENGTH(weekly_hosp_admissions_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(weekly_hosp_admissions_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(weekly_hosp_admissions_per_million, '.', -1)), ')')) AS max_len_weekly_hosp_admissions_per_million FROM master_dataset
-WHERE LENGTH(weekly_hosp_admissions_per_million) = (SELECT MAX(LENGTH(weekly_hosp_admissions_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_tests, '; ', LENGTH(total_tests), '; ', '(', LENGTH(SUBSTRING_INDEX(total_tests, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_tests, '.', -1)), ')')) AS max_len_total_tests FROM master_dataset
-WHERE LENGTH(total_tests) = (SELECT MAX(LENGTH(total_tests)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_tests, '; ', LENGTH(new_tests), '; ', '(', LENGTH(SUBSTRING_INDEX(new_tests, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_tests, '.', -1)), ')')) AS max_len_new_tests FROM master_dataset
-WHERE LENGTH(new_tests) = (SELECT MAX(LENGTH(new_tests)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_tests_per_thousand, '; ', LENGTH(total_tests_per_thousand), '; ', '(', LENGTH(SUBSTRING_INDEX(total_tests_per_thousand, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_tests_per_thousand, '.', -1)), ')')) AS max_len_total_tests_per_thousand FROM master_dataset
-WHERE LENGTH(total_tests_per_thousand) = (SELECT MAX(LENGTH(total_tests_per_thousand)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_tests_per_thousand, '; ', LENGTH(new_tests_per_thousand), '; ', '(', LENGTH(SUBSTRING_INDEX(new_tests_per_thousand, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_tests_per_thousand, '.', -1)), ')')) AS max_len_new_tests_per_thousand FROM master_dataset
-WHERE LENGTH(new_tests_per_thousand) = (SELECT MAX(LENGTH(new_tests_per_thousand)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_tests_smoothed, '; ', LENGTH(new_tests_smoothed), '; ', '(', LENGTH(SUBSTRING_INDEX(new_tests_smoothed, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_tests_smoothed, '.', -1)), ')')) AS max_len_new_tests_smoothed FROM master_dataset
-WHERE LENGTH(new_tests_smoothed) = (SELECT MAX(LENGTH(new_tests_smoothed)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_tests_smoothed_per_thousand, '; ', LENGTH(new_tests_smoothed_per_thousand), '; ', '(', LENGTH(SUBSTRING_INDEX(new_tests_smoothed_per_thousand, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_tests_smoothed_per_thousand, '.', -1)), ')')) AS max_len_new_tests_smoothed_per_thousand FROM master_dataset
-WHERE LENGTH(new_tests_smoothed_per_thousand) = (SELECT MAX(LENGTH(new_tests_smoothed_per_thousand)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(positive_rate, '; ', LENGTH(positive_rate), '; ', '(', LENGTH(SUBSTRING_INDEX(positive_rate, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(positive_rate, '.', -1)), ')')) AS max_len_positive_rate FROM master_dataset
-WHERE LENGTH(positive_rate) = (SELECT MAX(LENGTH(positive_rate)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(tests_per_case, '; ', LENGTH(tests_per_case), '; ', '(', LENGTH(SUBSTRING_INDEX(tests_per_case, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(tests_per_case, '.', -1)), ')')) AS max_len_tests_per_case FROM master_dataset
-WHERE LENGTH(tests_per_case) = (SELECT MAX(LENGTH(tests_per_case)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_vaccinations, '; ', LENGTH(total_vaccinations), '; ', '(', LENGTH(SUBSTRING_INDEX(total_vaccinations, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_vaccinations, '.', -1)), ')')) AS max_len_total_vaccinations FROM master_dataset
-WHERE LENGTH(total_vaccinations) = (SELECT MAX(LENGTH(total_vaccinations)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(people_vaccinated, '; ', LENGTH(people_vaccinated), '; ', '(', LENGTH(SUBSTRING_INDEX(people_vaccinated, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(people_vaccinated, '.', -1)), ')')) AS max_len_people_vaccinated FROM master_dataset
-WHERE LENGTH(people_vaccinated) = (SELECT MAX(LENGTH(people_vaccinated)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(people_fully_vaccinated, '; ', LENGTH(people_fully_vaccinated), '; ', '(', LENGTH(SUBSTRING_INDEX(people_fully_vaccinated, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(people_fully_vaccinated, '.', -1)), ')')) AS max_len_people_fully_vaccinated FROM master_dataset
-WHERE LENGTH(people_fully_vaccinated) = (SELECT MAX(LENGTH(people_fully_vaccinated)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_boosters, '; ', LENGTH(total_boosters), '; ', '(', LENGTH(SUBSTRING_INDEX(total_boosters, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_boosters, '.', -1)), ')')) AS max_len_total_boosters FROM master_dataset
-WHERE LENGTH(total_boosters) = (SELECT MAX(LENGTH(total_boosters)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_vaccinations, '; ', LENGTH(new_vaccinations), '; ', '(', LENGTH(SUBSTRING_INDEX(new_vaccinations, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_vaccinations, '.', -1)), ')')) AS max_len_new_vaccinations FROM master_dataset
-WHERE LENGTH(new_vaccinations) = (SELECT MAX(LENGTH(new_vaccinations)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_vaccinations_smoothed, '; ', LENGTH(new_vaccinations_smoothed), '; ', '(', LENGTH(SUBSTRING_INDEX(new_vaccinations_smoothed, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_vaccinations_smoothed, '.', -1)), ')')) AS max_len_new_vaccinations_smoothed FROM master_dataset
-WHERE LENGTH(new_vaccinations_smoothed) = (SELECT MAX(LENGTH(new_vaccinations_smoothed)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_vaccinations_per_hundred, '; ', LENGTH(total_vaccinations_per_hundred), '; ', '(', LENGTH(SUBSTRING_INDEX(total_vaccinations_per_hundred, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_vaccinations_per_hundred, '.', -1)), ')')) AS max_len_total_vaccinations_per_hundred FROM master_dataset
-WHERE LENGTH(total_vaccinations_per_hundred) = (SELECT MAX(LENGTH(total_vaccinations_per_hundred)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(people_vaccinated_per_hundred, '; ', LENGTH(people_vaccinated_per_hundred), '; ', '(', LENGTH(SUBSTRING_INDEX(people_vaccinated_per_hundred, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(people_vaccinated_per_hundred, '.', -1)), ')')) AS max_len_people_vaccinated_per_hundred FROM master_dataset
-WHERE LENGTH(people_vaccinated_per_hundred) = (SELECT MAX(LENGTH(people_vaccinated_per_hundred)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(people_fully_vaccinated_per_hundred, '; ', LENGTH(people_fully_vaccinated_per_hundred), '; ', '(', LENGTH(SUBSTRING_INDEX(people_fully_vaccinated_per_hundred, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(people_fully_vaccinated_per_hundred, '.', -1)), ')')) AS max_len_people_fully_vaccinated_per_hundred FROM master_dataset
-WHERE LENGTH(people_fully_vaccinated_per_hundred) = (SELECT MAX(LENGTH(people_fully_vaccinated_per_hundred)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(total_boosters_per_hundred, '; ', LENGTH(total_boosters_per_hundred), '; ', '(', LENGTH(SUBSTRING_INDEX(total_boosters_per_hundred, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(total_boosters_per_hundred, '.', -1)), ')')) AS max_len_total_boosters_per_hundred FROM master_dataset
-WHERE LENGTH(total_boosters_per_hundred) = (SELECT MAX(LENGTH(total_boosters_per_hundred)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_vaccinations_smoothed_per_million, '; ', LENGTH(new_vaccinations_smoothed_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(new_vaccinations_smoothed_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_vaccinations_smoothed_per_million, '.', -1)), ')')) AS max_len_new_vaccinations_smoothed_per_million FROM master_dataset
-WHERE LENGTH(new_vaccinations_smoothed_per_million) = (SELECT MAX(LENGTH(new_vaccinations_smoothed_per_million)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_people_vaccinated_smoothed, '; ', LENGTH(new_people_vaccinated_smoothed), '; ', '(', LENGTH(SUBSTRING_INDEX(new_people_vaccinated_smoothed, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_people_vaccinated_smoothed, '.', -1)), ')')) AS max_len_new_people_vaccinated_smoothed FROM master_dataset
-WHERE LENGTH(new_people_vaccinated_smoothed) = (SELECT MAX(LENGTH(new_people_vaccinated_smoothed)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(new_people_vaccinated_smoothed_per_hundred, '; ', LENGTH(new_people_vaccinated_smoothed_per_hundred), '; ', '(', LENGTH(SUBSTRING_INDEX(new_people_vaccinated_smoothed_per_hundred, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(new_people_vaccinated_smoothed_per_hundred, '.', -1)), ')')) AS max_len_new_people_vaccinated_smoothed_per_hundred FROM master_dataset
-WHERE LENGTH(new_people_vaccinated_smoothed_per_hundred) = (SELECT MAX(LENGTH(new_people_vaccinated_smoothed_per_hundred)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(stringency_index, '; ', LENGTH(stringency_index), '; ', '(', LENGTH(SUBSTRING_INDEX(stringency_index, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(stringency_index, '.', -1)), ')')) AS max_len_stringency_index FROM master_dataset
-WHERE LENGTH(stringency_index) = (SELECT MAX(LENGTH(stringency_index)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(population_density, '; ', LENGTH(population_density), '; ', '(', LENGTH(SUBSTRING_INDEX(population_density, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(population_density, '.', -1)), ')')) AS max_len_population_density FROM master_dataset
-WHERE LENGTH(population_density) = (SELECT MAX(LENGTH(population_density)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(median_age, '; ', LENGTH(median_age), '; ', '(', LENGTH(SUBSTRING_INDEX(median_age, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(median_age, '.', -1)), ')')) AS max_len_median_age FROM master_dataset
-WHERE LENGTH(median_age) = (SELECT MAX(LENGTH(median_age)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(aged_65_older, '; ', LENGTH(aged_65_older), '; ', '(', LENGTH(SUBSTRING_INDEX(aged_65_older, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(aged_65_older, '.', -1)), ')')) AS max_len_aged_65_older FROM master_dataset
-WHERE LENGTH(aged_65_older) = (SELECT MAX(LENGTH(aged_65_older)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(aged_70_older, '; ', LENGTH(aged_70_older), '; ', '(', LENGTH(SUBSTRING_INDEX(aged_70_older, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(aged_70_older, '.', -1)), ')')) AS max_len_aged_70_older FROM master_dataset
-WHERE LENGTH(aged_70_older) = (SELECT MAX(LENGTH(aged_70_older)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(gdp_per_capita, '; ', LENGTH(gdp_per_capita), '; ', '(', LENGTH(SUBSTRING_INDEX(gdp_per_capita, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(gdp_per_capita, '.', -1)), ')')) AS max_len_gdp_per_capita FROM master_dataset
-WHERE LENGTH(gdp_per_capita) = (SELECT MAX(LENGTH(gdp_per_capita)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(extreme_poverty, '; ', LENGTH(extreme_poverty), '; ', '(', LENGTH(SUBSTRING_INDEX(extreme_poverty, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(extreme_poverty, '.', -1)), ')')) AS max_len_extreme_poverty FROM master_dataset
-WHERE LENGTH(extreme_poverty) = (SELECT MAX(LENGTH(extreme_poverty)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(cardiovasc_death_rate, '; ', LENGTH(cardiovasc_death_rate), '; ', '(', LENGTH(SUBSTRING_INDEX(cardiovasc_death_rate, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(cardiovasc_death_rate, '.', -1)), ')')) AS max_len_cardiovasc_death_rate FROM master_dataset
-WHERE LENGTH(cardiovasc_death_rate) = (SELECT MAX(LENGTH(cardiovasc_death_rate)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(diabetes_prevalence, '; ', LENGTH(diabetes_prevalence), '; ', '(', LENGTH(SUBSTRING_INDEX(diabetes_prevalence, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(diabetes_prevalence, '.', -1)), ')')) AS max_len_diabetes_prevalence FROM master_dataset
-WHERE LENGTH(diabetes_prevalence) = (SELECT MAX(LENGTH(diabetes_prevalence)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(female_smokers, '; ', LENGTH(female_smokers), '; ', '(', LENGTH(SUBSTRING_INDEX(female_smokers, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(female_smokers, '.', -1)), ')')) AS max_len_female_smokers FROM master_dataset
-WHERE LENGTH(female_smokers) = (SELECT MAX(LENGTH(female_smokers)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(male_smokers, '; ', LENGTH(male_smokers), '; ', '(', LENGTH(SUBSTRING_INDEX(male_smokers, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(male_smokers, '.', -1)), ')')) AS max_len_male_smokers FROM master_dataset
-WHERE LENGTH(male_smokers) = (SELECT MAX(LENGTH(male_smokers)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(handwashing_facilities, '; ', LENGTH(handwashing_facilities), '; ', '(', LENGTH(SUBSTRING_INDEX(handwashing_facilities, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(handwashing_facilities, '.', -1)), ')')) AS max_len_handwashing_facilities FROM master_dataset
-WHERE LENGTH(handwashing_facilities) = (SELECT MAX(LENGTH(handwashing_facilities)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(hospital_beds_per_thousand, '; ', LENGTH(hospital_beds_per_thousand), '; ', '(', LENGTH(SUBSTRING_INDEX(hospital_beds_per_thousand, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(hospital_beds_per_thousand, '.', -1)), ')')) AS max_len_hospital_beds_per_thousand FROM master_dataset
-WHERE LENGTH(hospital_beds_per_thousand) = (SELECT MAX(LENGTH(hospital_beds_per_thousand)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(life_expectancy, '; ', LENGTH(life_expectancy), '; ', '(', LENGTH(SUBSTRING_INDEX(life_expectancy, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(life_expectancy, '.', -1)), ')')) AS max_len_life_expectancy FROM master_dataset
-WHERE LENGTH(life_expectancy) = (SELECT MAX(LENGTH(life_expectancy)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(human_development_index, '; ', LENGTH(human_development_index), '; ', '(', LENGTH(SUBSTRING_INDEX(human_development_index, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(human_development_index, '.', -1)), ')')) AS max_len_human_development_index FROM master_dataset
-WHERE LENGTH(human_development_index) = (SELECT MAX(LENGTH(human_development_index)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(population, '; ', LENGTH(population), '; ', '(', LENGTH(SUBSTRING_INDEX(population, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(population, '.', -1)), ')')) AS max_len_population FROM master_dataset
-WHERE LENGTH(population) = (SELECT MAX(LENGTH(population)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(excess_mortality_cumulative_absolute, '; ', LENGTH(excess_mortality_cumulative_absolute), '; ', '(', LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_absolute, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_absolute, '.', -1)), ')')) AS max_len_excess_mortality_cumulative_absolute FROM master_dataset
-WHERE LENGTH(excess_mortality_cumulative_absolute) = (SELECT MAX(LENGTH(excess_mortality_cumulative_absolute)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(excess_mortality_cumulative, '; ', LENGTH(excess_mortality_cumulative), '; ', '(', LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative, '.', -1)), ')')) AS max_len_excess_mortality_cumulative FROM master_dataset
-WHERE LENGTH(excess_mortality_cumulative) = (SELECT MAX(LENGTH(excess_mortality_cumulative)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(excess_mortality, '; ', LENGTH(excess_mortality), '; ', '(', LENGTH(SUBSTRING_INDEX(excess_mortality, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(excess_mortality, '.', -1)), ')')) AS max_len_excess_mortality FROM master_dataset
-WHERE LENGTH(excess_mortality) = (SELECT MAX(LENGTH(excess_mortality)) FROM master_dataset);
-
-
-SELECT DISTINCT(CONCAT(excess_mortality_cumulative_per_million, '; ', LENGTH(excess_mortality_cumulative_per_million), '; ', '(', LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_per_million, '.', 1)) , ', ', LENGTH(SUBSTRING_INDEX(excess_mortality_cumulative_per_million, '.', -1)), ')')) AS max_len_excess_mortality_cumulative_per_million FROM master_dataset
-WHERE LENGTH(excess_mortality_cumulative_per_million) = (SELECT MAX(LENGTH(excess_mortality_cumulative_per_million)) FROM master_dataset);
-
-
-
--- RESULTS:
--- The following are the appropriate data-types for all 67 features, inclusive of the only temporal feature, date:
-
-
-/* Hierarchically-subsetting Features (desc order)	
-	
--- continent AS
--- location AS
--- _date_ AS
-
-*/
-
-/* Fixed Features per Location		
-
--- iso_code	AS	
--- population AS	
--- population_density AS	
--- median_age AS
--- aged_65_older AS		
--- aged_70_older AS		
--- gdp_per_capita AS		
--- extreme_poverty AS		
--- cardiovasc_death_rate AS		
--- diabetes_prevalence AS		
--- female_smokers AS		
--- male_smokers	AS	
--- handwashing_facilities AS		
--- hospital_beds_per_thousand AS		
--- life_expectancy AS		
--- human_development_index AS	
-
-*/	
-
-
--- Dynamic Features per Date (Grouped):
-
-/* Tests & Positivity:
-
--- new_tests AS
--- tests_units AS
--- total_tests AS
--- total_tests_per_thousand AS
--- new_tests_per_thousand AS
--- new_tests_smoothed AS
--- new_tests_smoothed_per_thousand AS
--- positive_rate AS
--- tests_per_case AS
-
-*/
-
-/* Confirmed Cases:
-
--- new_cases AS
--- total_cases AS
--- total_cases_per_million AS
--- new_cases_smoothed AS
--- new_cases_per_million AS
--- new_cases_smoothed_per_million AS
-
-*/
-
-/* Hospital & ICU:
-
--- hosp_patients AS
--- icu_patients AS
--- weekly_hosp_admissions AS
--- weekly_icu_admissions AS
--- hosp_patients_per_million AS
--- icu_patients_per_million AS
--- weekly_hosp_admissions_per_million AS
--- weekly_icu_admissions_per_million AS
-
-*/
-
-/* Confirmed Deaths:
-
--- new_deaths AS
--- total_deaths AS
--- new_deaths_smoothed AS
--- total_deaths_per_million AS
--- new_deaths_per_million AS
--- new_deaths_smoothed_per_million AS
-
-*/
-
-/* Vaccinations:
-
--- new_vaccinations AS
--- people_vaccinated AS
--- people_fully_vaccinated AS
--- total_boosters AS
--- total_vaccinations AS
--- new_vaccinations_smoothed AS
--- total_vaccinations_per_hundred AS
--- people_vaccinated_per_hundred AS
--- people_fully_vaccinated_per_hundred AS
--- total_boosters_per_hundred AS
--- new_vaccinations_smoothed_per_million AS
--- new_people_vaccinated_smoothed AS
--- new_people_vaccinated_smoothed_per_hundred AS
-
-*/
-
-/* Excess Mortality:
-
--- excess_mortality AS
--- excess_mortality_cumulative AS
--- excess_mortality_cumulative_absolute AS
--- excess_mortality_cumulative_per_million AS
-
-*/
-
-
-
-
--- whole numbers: 
--- decimal numbers
--- dates
--- strings
 
 
 
