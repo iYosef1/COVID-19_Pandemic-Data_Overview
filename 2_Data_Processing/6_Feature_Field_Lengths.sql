@@ -135,7 +135,7 @@ WHERE LENGTH(new_cases) = (SELECT MAX(LENGTH(new_cases)) FROM data_load);
 -- A feature supposedly of discrete numerical values only may in error consist of decimal values as well. 
 
 
--- The subsequent 2 queries below serve as test data with arbitrary but intentional values for comfirming success in varying case scenarios for the appropriate digit-counts for numerical data-types:
+-- The subsequent 2 commands below serve as test data with arbitrary but intentional values for comfirming success in varying case scenarios for the appropriate digit-counts for numerical data-types:
 
 CREATE TABLE feature_len_query_testing_table (
 	category_col_check VARCHAR(100),

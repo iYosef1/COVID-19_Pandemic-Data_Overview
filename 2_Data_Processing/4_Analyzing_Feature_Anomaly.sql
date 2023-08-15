@@ -62,9 +62,9 @@ WHERE excess_mortality_cumulative_per_million LIKE '_____.%';
 
 SELECT @@GLOBAL.sql_mode; -- Displays the default arguments of the sql_mode variable; 
 
-SET sql_mode = ''; -- Without the GLOBAL variable in this query, this line of code will be active for the current session only, i.e., the change will not persist once the session is closed.
+SET sql_mode = ''; -- Without the GLOBAL variable in this command, this line of code will be active for the current session only, i.e., the change will not persist once the session is closed.
 				   -- The current arguments determining the behaviour and strictness have been replaced with an empty string to bypass Error 1366. 
-				   -- Without setting sql_mode to '', the UPDATE and ALTER TABLE queries will return the following error response:
+				   -- Without setting sql_mode to '', the UPDATE and ALTER TABLE commands will return the following error response:
 				   -- Error Code: 1366. Incorrect DECIMAL value: '0' for column '' at row -1
 				   -- According to this error code, the column name is an empty string, the value being modified is invalid, and the error itself is occurring at row -1.
                    -- There is no coherency with the column data and the message associated with this error.
@@ -74,16 +74,16 @@ SELECT @@SESSION.sql_mode; -- This query will confirm that the new argument of t
 -- 1) UPDATE Approach:
 SELECT location, _date_, excess_mortality_cumulative_per_million FROM data_load;
 
--- UPDATE Query - Bypassing Error:
--- The following error is displayed when trying to run an UPDATE query.
+-- UPDATE Command - Bypassing Error:
+-- The following error is displayed when trying to run an UPDATE command.
 -- Error Code: 1175. You are using safe update mode and you tried to update a table without a WHERE that uses a KEY column.  
 -- To disable safe mode, toggle the option in Preferences -> SQL Editor and reconnect.
 
--- To enable UPDATE query:
+-- To enable UPDATE command:
 -- Preferences > SQL Editor > "Safe Updates" check box was unchecked > OK. 
 -- Query > Reconnect to server
 
--- IMPORTANT! The following query may have to be run a second time for its execution to be confirmed:
+-- IMPORTANT! The following command may have to be run a second time for its execution to be confirmed:
 UPDATE data_load SET excess_mortality_cumulative_per_million = CAST(excess_mortality_cumulative_per_million AS DECIMAL(30, 30));
 
 SELECT excess_mortality_cumulative_per_million AS non_zero_values,
@@ -94,13 +94,13 @@ ORDER BY between_1_and_neg_1 ASC; -- To reiterate, running this query in ASC ord
                                   -- However, there are only True values because all values are between 1 and -1.
 
 
--- IMPORTANT! Run all queries from 2_LDI before starting 2):
+-- IMPORTANT! REFRESH! Run all SQL commands from 2_LDI before starting 2):
 
 -- 2) ALTER TABLE Approach:
 SET sql_mode = '';
 SELECT location, _date_, excess_mortality_cumulative_per_million FROM data_load;
 
--- IMPORTANT! The following query may have to be run a second time for its execution to be confirmed:
+-- IMPORTANT! The following command may have to be run a second time for its execution to be confirmed:
 ALTER TABLE data_load MODIFY COLUMN excess_mortality_cumulative_per_million DECIMAL(30, 30);
 
 SELECT excess_mortality_cumulative_per_million AS non_zero_values,

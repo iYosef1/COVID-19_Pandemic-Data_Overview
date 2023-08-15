@@ -1,9 +1,9 @@
--- Maintainence of Data Integrity:
+-- Maintainence of Data Integrity Post-conversion:
 
 -- The data-types being used within this dataset are: INT for whole numbers, DECIMAL for decimal numbers, DATE for dates, and VARCHAR for strings. 
 -- Certain key arguments passed in for data-type conversion have been rounded by ceiling the values.
 -- The DECIMAL data-type does not require the UNSIGNED or SIGNED keyword, however, the INT data-type does require one of the 2 keywords depending on the values of the feature. 
--- 
+-- If an INT data-type is not assigned either UNSIGNED or SIGNED, then its default setting will be SIGNED, i.e., it will allow for postive and negative values to exist within the feature.
 
 /* The queries of 6_Feature_Field_Lengths.sql have been used to ascertain the arguments for VARCHAR and DECIMAL data-types.
 
@@ -427,9 +427,7 @@ ORDER BY T_or_F ASC;
 -- All numerically continuous features have been correctly type-casted as there are no False values listed at the top of any of the T_or_F columns.
 
 -- Next Steps:
--- 4. a) Apply the ALTER TABLE query to update the entire table with the appropriate data-types. 
+-- 4. a) Apply the ALTER TABLE command to update the entire table with the appropriate data-types. 
 --    b) When altering the entire table from VARCHAR, ensure that the empty strings are being converted into NULLS, not into 0s as it is the case when type-casting.
---    c) With the CREATE clause rearrange the features of the finalized dataset and name this new table "master_dataset". 
---    d) With the CREATE clause create a new database called "covid19_pandemic_db" and import the "master_dataset" into this new database.
---    e) Strictly for reference purposes, use the LOAD INFILE method to import the original csv data file into this newly created database as well, and name this table "original_owid_covid_dataset".
+
 

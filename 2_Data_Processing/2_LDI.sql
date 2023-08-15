@@ -1,6 +1,6 @@
 -- Data Import via LOAD DATA INFILE Approach:
 
--- Importing large csv files can be time-consuming. The following set of queries is a speedy approach for importing large datasets:
+-- Importing large csv files can be time-consuming. The following set of commands is a speedy approach for importing large datasets:
 
 DROP TABLE data_load;
 
@@ -90,7 +90,7 @@ LINES TERMINATED BY '\n' -- If there is an issue in table format, try '\r\n' ins
 IGNORE 1 LINES;
 
 
--- REVIEW ON DATA LOAD QUERY:
+-- REVIEW ON DATA LOAD COMMAND:
 
 -- The data cannot be previewed immediately after the load as there is apparently a waiting period before it finally becomes accessible in the newly created table.
 -- On that note, there is an interruption by Error 2013.
@@ -113,7 +113,7 @@ IGNORE 1 LINES;
 -- Right-click on "MySQL80" > Restart or Refresh
 
 -- Success! The LOAD DATA INFILE approach ran without error.
--- Moving forward, the queries run will predominantly work with the data_load table.
+-- Moving forward, the queries and commands run will predominantly work with the data_load table.
 
 
 

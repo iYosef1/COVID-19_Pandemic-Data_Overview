@@ -14,7 +14,9 @@ Important! Dates listed below only capture start dates of different aspects of t
 
 Date: April 04, 2023
 
-Stage 1 - Metadata_Report.xlsm: Prior to any Exploratory Data Analysis (EDA), a visual review of the dataset was conducted to gain a more contextual understanding of it.
+Stage 1 - Metadata_Report.xlsm: 
+
+Prior to any Exploratory Data Analysis (EDA), a visual review of the dataset was conducted to gain a more contextual understanding of it.
 A python script alongside ChatGPT's OpenAi library was used to automate a request listing all dataset features (column headers) along with a description of it.
 The response was saved into a text file along with a secondary response that was an output on the python IDLE which was saved manually as another text file.
 The aformentioned text files were named "feature_description" and "feature_list", respectively, and both were used as reference points to better understand the data.
@@ -31,6 +33,14 @@ during the compilation of the metadata file. The 1_Metadata_Extraction directory
 files associated with excess mortalities were specifically utilized in Metadata_analysis_5.xlsx.
 
 Completion Date: May 24, 2023
+
+
+
+Date: July 01, 2023
+
+Stage 2 - MySQL Files - EDA & Database Design:
+
+
 
 
 

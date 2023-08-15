@@ -23,13 +23,13 @@ SQL Files: queries followed by respective results for confirmation after running
 	-SQL_Datatype_Assignment: datatypes need to be readjusted via character length of each field
 	-Compare variance in MetadataReport to derive contexual conclusions.
 
-4) Database_Modeling:
-	-Setting primary keys
-	-Grouping and connecting tables
-
-5) Exploratory Data Analysis (EDA): 
+4) Exploratory Data Analysis (EDA): 
 	-Descriptive stats on numerical features
 	-Grouping of categorical features
+
+5) Database_Modeling:
+	-Setting primary keys
+	-Grouping and connecting tables
 
 
 Database Engineering (Database Modelling/Design): watch course videos.

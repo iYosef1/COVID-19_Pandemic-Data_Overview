@@ -85,7 +85,8 @@ nulls_per_feature = [0, 14234, 0, 0, 35883, 8633, 9897, 56008, 8551, 9781, 35883
                      114420, 264641, 264641, 264294, 264294, 290215, 290215, 278071, 278071, 219850, 223834, 219850,
                      223834, 195272, 195272, 203310, 204889, 192449, 226096, 229211, 231491, 257285, 239042, 137082,
                      226096, 229211, 231491, 257285, 137082, 137032, 137032, 106043, 45346, 63093, 71350, 65462, 67812,
-                     150181, 67408, 55584, 125314, 127684, 185723, 94581, 24087, 74506, 0, 288942, 288942, 288942, 288942]
+                     150181, 67408, 55584, 125314, 127684, 185723, 94581, 24087, 74506, 0, 288942, 288942, 288942, 0]
+
 
 #print(len(nulls_per_feature))
 
@@ -93,10 +94,9 @@ nulls_per_feature = [0, 14234, 0, 0, 35883, 8633, 9897, 56008, 8551, 9781, 35883
 sql_add = ''
 for null in nulls_per_feature:
     sql_add = sql_add + ' + ' + str(null)
-#print(sql_add)
+print(sql_add)
 
-
-
+print('\nUSE THIS CALCULATION IN SQL\n')
 
 
 
@@ -331,6 +331,8 @@ ORDER BY T_or_F ASC;
 
 print('\n\n\n')
 
+
+
 continuous_datatype_assignment = [('new_cases_smoothed', 'DECIMAL(20, 3)'),
                                   ('new_deaths_smoothed', 'DECIMAL(20, 3)'),
                                   ('total_cases_per_million', 'DECIMAL(20, 3)'),
@@ -382,6 +384,83 @@ FROM data_load
 ORDER BY T_or_F ASC;
 ''')
 
+print('\n\n\n')
+
+
+
+print('TESTING ALTER COMMANDS!')
+# ALTER Command Test-run on ALL Features - Error Search:
+# The following SQL code needs to be run in MySQL to identify any possible errors that then need to be resolved.
+
+categorical_datatype_assignment = [('iso_code', 'VARCHAR(10)'),
+                                   ('continent', 'VARCHAR(20)'),
+                                   ('location', 'VARCHAR(40)'),
+                                   ('tests_units', 'VARCHAR(20)')]
+
+for assignment in categorical_datatype_assignment:
+    print(f'''
+ALTER TABLE testing_table MODIFY {assignment[0]} {assignment[1]};
+''')
+
+print('\n\n\n')
+
+
+print('ALTER TABLE testing_table MODIFY _date_ DATE;')
+
+print('\n\n\n')
+
+
+for feature in numerical_discrete_features:
+    print(f'''
+ALTER TABLE testing_table MODIFY {feature} INT SIGNED; 
+''')
+
+print('\n\n\n')
+    
+
+for assignment in continuous_datatype_assignment:
+    print(f'''
+ALTER TABLE testing_table MODIFY {assignment[0]} {assignment[1]};
+''')
+
+print('\n\n\n')
+
+
+
+print('-- TESTING FOR ANOMALIES!')
+# ANOMALY TESTING IN DECIMAL DATA-TYPE FEATURES:
+
+for assignment in continuous_datatype_assignment:
+    print(f'''
+SELECT {assignment[0]}
+FROM testing_table
+WHERE {assignment[0]} = '';
+-- Confirmed. Query returns exclusively empty strings unlike excess_mortality_cumulative_per_million which returns nothing.
+''')
+# Confirmed! No other anomaly aside from excess_mortality_cumulative_per_million!
+print('\n\n\n')
+
+
+
+# IN-PROGRESS!
+print('CODE FOR CLEARING SQL ERRORS FOR SUBSEQUENT ALTER COMMAND!')
+# UPDATE Command - Resolves Errors Found in ALTER Command Test-run:
+
+print('numerical_discrete_features'.upper())
+for feature in numerical_discrete_features: # The population feature is a special case done independently.
+    print(f'''
+UPDATE testing_table SET {feature} = NULL
+WHERE {feature} = ''; 
+''')
+
+print('\n\n')
+
+print('continuous_datatype_assignment'.upper())
+for assignment in continuous_datatype_assignment: # The excess_mortality_cumulative_per_million feature is a special case done independently.
+    print(f'''
+UPDATE testing_table SET {assignment[0]} = NULL
+WHERE {assignment[0]} = ''; 
+''')
 
 
 
