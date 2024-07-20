@@ -32,7 +32,7 @@ https://github.com/owid/covid-19-data/blob/master/public/data/README.md. Upon co
 during the compilation of the metadata file. The 1_Metadata_Extraction directory also contains 7 analyses that were crucial in the extraction of metadata. The additional
 files associated with excess mortalities were specifically utilized in Metadata_analysis_5.xlsx.
 
-Completion Date: May 24, 2023
+Completion Date: TBD
 
 
 
